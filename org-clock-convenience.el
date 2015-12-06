@@ -36,9 +36,20 @@ Return position, time string, and headlinein a list"
 		 do (setq mx elem)
 		 ;;and collect mx into hitlist
 		 ;;finally return (list mx hitlist clocklist)
-		 finally return mx) 
-	)))
-  )
+		 finally return mx)))))
+
+(defun org-clock-conv-open-if-in-drawer ()
+  "If pos is within drawer, open the drawer."
+  (let ((element (org-element-at-point)))
+    (while (and element
+		(not (memq (org-element-type element)
+			   '(drawer property-drawer))))
+      (setq element (org-element-property :parent element)))
+    (when element
+      (let ((pos (point)))
+	(goto-char (org-element-property :begin element))
+	(org-flag-drawer nil)
+	(goto-char pos)))))
 
 (defun org-clock-conv-goto-last-clockout (&optional buffer)
   "Jump to the position of the last clockout in BUFFER."
@@ -47,15 +58,7 @@ Return position, time string, and headlinein a list"
 	 (mark (car (org-clock-conv-find-last-clockout buf))))
     (org-goto-marker-or-bmk mark)
     (org-reveal)
-    ;; this is a bit awkward: the folding of the drawer by org-flag-drawer
-    ;; is only possible if we jump to the start of the drawer
-    (when (org-in-drawer-p)
-      (re-search-backward 
-       (concat "^[ \t]*:" (regexp-opt org-drawers) ":"))
-      (org-flag-drawer nil)  
-      (org-goto-marker-or-bmk mark))
-    )
-  )
+    (org-clock-conv-open-if-in-drawer)))
 
 
 (provide 'org-clock-convenience)
