@@ -9,34 +9,37 @@
 
 (defun org-clock-conv-find-last-clockout (buffer)
   "Find the last clock-out time in BUFFER.
-Return position, time string, and headlinein a list"
+Return position, time string, and headline in a list"
   (with-current-buffer buffer
-    (save-restriction
-      (widen)
-      (let* ((cpattern (concat "^ *" org-clock-string
-			       ".*\\]--\\(\\[[^]]+\\]\\)"))
-	     (parsetree (org-element-parse-buffer 'headline))
-	     (clocklist
-	      (org-element-map parsetree 'headline
-		(lambda (hl)
-		  (goto-char (org-element-property :begin hl))
-		  (let* ((end (org-element-property :end hl))
-			 (srend (save-excursion (end-of-line)
-						(or (re-search-forward "^\\\*" end t)
-						    end))))
-		    (if (re-search-forward cpattern srend t)
+    (save-excursion
+      (save-restriction
+	(widen)
+	(let* ((cpattern (concat "^ *" org-clock-string
+				 ".*\\]--\\(\\[[^]]+\\]\\)"))
+	       (parsetree (org-element-parse-buffer 'headline))
+	       (clocklist
+		(org-element-map parsetree 'headline
+		  (lambda (hl)
+		    (goto-char (org-element-property :begin hl))
+		    (let* ((end (org-element-property :end hl))
+			   (srend (save-excursion (end-of-line)
+						  (or (re-search-forward "^\\\*" end t)
+						      end))))
+		      (if (re-search-forward cpattern srend t)
 					;(list (point) (org-time-string-to-time (match-string 1)))
-			(list (copy-marker  (- (point) (length (match-string-no-properties 1))))
-			      (match-string-no-properties 1)
-			      (org-element-property :title hl))
-		      nil))))))
-	(cl-loop with mx = (list 0 "<1970-01-02 Thu>")
-		 for elem in clocklist
-		 if (org-time> (nth 1 elem) (nth 1 mx))
-		 do (setq mx elem)
-		 ;;and collect mx into hitlist
-		 ;;finally return (list mx hitlist clocklist)
-		 finally return mx)))))
+			  (list
+			   (copy-marker  (- (point)
+					    (length (match-string-no-properties 1))))
+			   (match-string-no-properties 1)
+			   (org-element-property :title hl))
+			nil))))))
+	  (cl-loop with mx = (list 0 "<1970-01-02 Thu>")
+		   for elem in clocklist
+		   if (org-time> (nth 1 elem) (nth 1 mx))
+		   do (setq mx elem)
+		   ;;and collect mx into hitlist
+		   ;;finally return (list mx hitlist clocklist)
+		   finally return mx))))))
 
 (defun org-clock-conv-open-if-in-drawer ()
   "If pos is within drawer, open the drawer."
