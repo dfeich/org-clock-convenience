@@ -1,0 +1,55 @@
+#+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
+#+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
+#+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t
+#+OPTIONS: tags:t tasks:t tex:t timestamp:t title:t toc:nil todo:t |:t
+#+TITLE: Org-clock-convenience
+#+DATE: <2016-01-09 Sat>
+#+AUTHOR: Derek Feichtinger
+#+EMAIL: dfeich@gmail.com
+#+LANGUAGE: en
+#+SELECT_TAGS: export
+#+EXCLUDE_TAGS: noexport
+#+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
+
+* Introduction
+
+  This is a collection of functions I am writing in order to make my
+  clocking workflows easier. It's not ready for publishing to MELPA.
+
+  Very often I forget to clock in or out, or I have to do other changes
+  to the clocked times, due to another task or somebody who interrupted
+  me. The result is that I have to jump between agenda view and the
+  org agenda file's clock lines in order to apply changes.
+
+  I always wanted to have commands with which I can change the clock
+  values directly from the agenda view in the same way that one can
+  change timestamps under the cursor inside of an org file using
+  =org-timestamp-up= and =org-timestamp-down= (usually mapped to
+  <S-up> and <S-down>).
+
+  This is my first implementation of such a functionality. Still has
+  a number of rough edges.
+  
+  Some of the available interactive functions
+  - =org-clock-conv-timestamp-up= and =org-clock-conv-timestamp-down=:
+    When on a /clocked/ line in the agenda buffer, this function will
+    increase/decrease the time according to the position of the
+    cursor. If the cursor is on the hour field, change the hour. If it
+    is on the minutes field, change the minutes.
+  - =org-clock-conv-goto-ts= goto the associated timestamp in the org
+    file. Position the cursor respective to where the cursor was
+    placed in the agenda view (e.g. on the minutes part of the
+    starting time).
+  - =org-clock-conv-goto-last-clockout=: goto timestamp of the last
+    clockout.
+
+* Current shortcomings
+  - =org-clock-conv-timestamp-up= and
+    =org-clock-conv-timestamp-down=: The refresh of the agenda buffer
+    with =org-agenda-redo= is much too expensive (recalculates
+    everything) and also has some unwanted side effects preventing an
+    easy implementation of the undo functionality in the agenda and
+    source buffer. But for this first implementation I will live with
+    the fact that undo can only be done in the org file.
+     
+  
