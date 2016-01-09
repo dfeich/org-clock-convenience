@@ -33,6 +33,12 @@ in an agenda buffer."
    finally return nil)
   )
 
+(defun org-clock-conv-at-timefield-p ()
+  "Return true if point is on a clocked time field in the agenda."
+  (pcase (org-clock-conv-get-fieldname (point))
+    ((or `d1-hours `d2-hours `d1-minutes `d2-minutes) t)
+    (default nil)))
+
 (defun org-clock-conv-goto-tr-field (fieldname)
   "Position point inside a field of the time range in the current line.
 The field is defined by FIELDNAME."
@@ -79,8 +85,25 @@ associated org agenda file."
     (save-excursion
       (org-clock-conv-goto-ts)
       (org-timestamp-change n nil 'updown))
+    ;; I should not use org-agenda-redo. Too expensive and does not play well
+    ;; with org-with-remote-undo
     (org-agenda-redo)
     (goto-char pos)))
+
+;; if I use org-with-remote-undo and include the org-agenda-redo in
+;; its form, then the agenda buffer somehow gets stale after an
+;; undo. org-get-at-bol does not seem to deliver a valid buffer marker any more
+;;
+;; (let* ((pos (point))
+;;        (marker (or (org-get-at-bol 'org-marker)
+;; 		   (org-agenda-error)))
+;;        (buffer (marker-buffer marker)))
+;;   (org-with-remote-undo buffer
+;;     (save-excursion
+;;       (org-clock-conv-goto-ts)
+;;       (org-timestamp-change n nil 'updown))
+;;     (org-agenda-redo))
+;;   (goto-char pos))
 
 (defun org-clock-conv-timestamp-up (&optional arg)
   "Increase the date item at the cursor by one.
