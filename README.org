@@ -16,16 +16,18 @@
   This is a collection of functions I am writing in order to make my
   clocking workflows easier. It's not ready for publishing to MELPA.
 
-  Very often I forget to clock in or out, or I have to do other changes
-  to the clocked times, due to another task or somebody who interrupted
-  me. The result is that I have to jump between agenda view and the
-  org agenda file's clock lines in order to apply changes.
+  It happens quite often that I get distracted by other tasks while
+  being clocked in. At the end of a day when I need to fill the gaps
+  and get the clocking consistent, I have to constantly jump between
+  the agenda view with the log lines (to see the surrounding tasks log
+  lines) and the org agenda file's clock lines in order to apply
+  changes.
 
   I always wanted to have commands with which I can change the clock
-  values directly from the agenda view in the same way that one can
-  change timestamps under the cursor inside of an org file using
-  =org-timestamp-up= and =org-timestamp-down= (usually mapped to
-  <S-up> and <S-down>).
+  values directly *from the log lines in the agenda view* in the same
+  way that one can change timestamps under the cursor inside of an org
+  file using =org-timestamp-up= and =org-timestamp-down= (usually
+  mapped to <S-up> and <S-down>).
 
   This is my first implementation of such a functionality. Still has
   a number of rough edges.
@@ -44,12 +46,15 @@
     clockout.
 
 * Current shortcomings
-  - =org-clock-conv-timestamp-up= and
-    =org-clock-conv-timestamp-down=: The refresh of the agenda buffer
-    with =org-agenda-redo= is much too expensive (recalculates
-    everything) and also has some unwanted side effects preventing an
-    easy implementation of the undo functionality in the agenda and
-    source buffer. But for this first implementation I will live with
-    the fact that undo can only be done in the org file.
+  - =org-clock-conv-timestamp-up= and =org-clock-conv-timestamp-down=:
+    The refresh of the agenda buffer with =org-agenda-redo= is much
+    too expensive (recalculates everything) and also has some unwanted
+    side effects preventing an easy implementation of the undo
+    functionality in the agenda and source buffer. This should be
+    implemented like when changing scheduling or deadline information
+    in the agenda buffer: The changes are overlayed over the text, and
+    the buffer is not rebuilt. But for this first implementation I
+    will live with the fact that undo can only be done in the org
+    file.
      
   
