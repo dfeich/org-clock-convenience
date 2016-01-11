@@ -27,7 +27,7 @@
 (require 'org-element)
 
 (defvar org-clock-conv-clocked-regexp
-  "^ +\\([^:]+\\): +\\([012][0-9]\\):\\([0-5][0-9]\\)-\\([012][0-9]\\):\\([0-5][0-9]\\) +Clocked: +([0-9]+:[0-5][0-9])"
+  "^ +\\([^:]+\\): +\\([ 012][0-9]\\):\\([0-5][0-9]\\)-\\([ 012][0-9]\\):\\([0-5][0-9]\\) +Clocked: +([0-9]+:[0-5][0-9])"
   "Regexp of a clocked time range in the Org agenda buffer.")
 
 (defvar org-clock-conv-clocked-fields

@@ -27,7 +27,7 @@
   values directly *from the log lines in the agenda view* in the same
   way that one can change timestamps under the cursor inside of an org
   file using =org-timestamp-up= and =org-timestamp-down= (usually
-  mapped to <S-up> and <S-down>).
+  mapped to =<S-up>= and =<S-down>=).
 
   This is my first implementation of such a functionality. Still has
   a number of rough edges.
