@@ -29,32 +29,28 @@
   file using =org-timestamp-up= and =org-timestamp-down= (usually
   mapped to =<S-up>= and =<S-down>=).
 
-  This is my first implementation of such a functionality. Still has
-  a number of rough edges.
-  
   Some of the available interactive functions
   - =org-clock-conv-timestamp-up= and =org-clock-conv-timestamp-down=:
     When on a /clocked/ line in the agenda buffer, this function will
     increase/decrease the time according to the position of the
     cursor. If the cursor is on the hour field, change the hour. If it
-    is on the minutes field, change the minutes.
+    is on the minutes field, change the minutes. Undo works on the
+    agenda and on the source buffer.
   - =org-clock-conv-goto-ts= goto the associated timestamp in the org
     file. Position the cursor respective to where the cursor was
     placed in the agenda view (e.g. on the minutes part of the
     starting time).
   - =org-clock-conv-goto-last-clockout=: goto timestamp of the last
-    clockout.
+    clockout (this is based on a real search through the buffer and
+    not based on the saved clockout value).
 
 * Current shortcomings
-  - =org-clock-conv-timestamp-up= and =org-clock-conv-timestamp-down=:
-    The refresh of the agenda buffer with =org-agenda-redo= is much
-    too expensive (recalculates everything) and also has some unwanted
-    side effects preventing an easy implementation of the undo
-    functionality in the agenda and source buffer. This should be
-    implemented like when changing scheduling or deadline information
-    in the agenda buffer: The changes are overlayed over the text, and
-    the buffer is not rebuilt. But for this first implementation I
-    will live with the fact that undo can only be done in the org
-    file.
+  - When changing the logged times using =org-clock-conv-timestamp-up=
+    and =org-clock-conv-timestamp-down=, the changes are now indicated
+    by a special font to display the changed fields. The agenda view
+    is only rebuilt upon user request (using =g= or =r=). For some
+    reason currently two rebuilds are needed before the agenda view is
+    updated. The first one does not seem to take effect. This is a
+    minor invonvenience.
      
   
