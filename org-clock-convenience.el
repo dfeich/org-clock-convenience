@@ -1,6 +1,6 @@
 ;;; org-clock-convenience --- convenience functions for org time tracking
 
-;; Author: Derek Feichtinger <derek.feichtinger@psi.ch>
+;; Author: Derek Feichtinger <dfeich.gmail.com>
 ;; Keywords: org
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
 
@@ -19,33 +19,74 @@
 
 
 ;;; Commentary:
-;; Convenience functions for easier time tracking. Provides commands
+;; Convenience functions for easier time tracking.  Provides commands
 ;; for changing timestamps directly from the agenda view.
 
 ;;; Code:
 (require 'org)
 (require 'org-element)
+(require 'cl-lib)
 
-(defvar org-clock-conv-clocked-regexp
+(defvar org-clock-conv-clocked-agenda-re
   "^ +\\([^:]+\\): +\\([ 012][0-9]\\):\\([0-5][0-9]\\)-\\([ 012][0-9]\\):\\([0-5][0-9]\\) +Clocked: +([0-9]+:[0-5][0-9])"
-  "Regexp of a clocked time range in the Org agenda buffer.")
+  "Regexp of a clocked time range log line in the Org agenda buffer.")
 
-(defvar org-clock-conv-clocked-fields
+(defvar org-clock-conv-clocked-agenda-fields
   '(filename d1-hours d1-minutes d2-hours d2-minutes duration)
-  "Field names corresponding to submatches of org-clock-conv-clocked-regexp.")
+  "Field names corresponding to submatches of `org-clock-conv-clocked-agenda-re'.")
+
+(defvar org-clock-conv-tr-re
+  (concat " *CLOCK: *\\["
+	  org-ts-regexp0 "\\]\\(?:--\\[\\)?"
+	  org-ts-regexp0 "?"
+	  "\\(?:\\] *=> *\\([0-9]+:[0-9]\\{2\\}\\)\\)?")
+  "Regexp of a clocked time range in an org file for field analysis.")
+
+(defvar org-clock-conv-tr-fields
+  '(d1-timestamp d1-year d1-month d1-day d1-dayname d1-time d1-hours d1-minutes
+		 d2-timestamp d2-year d2-month d2-day d2-dayname d2-time d2-hours d2-minutes
+		 sum)
+  "Field names corresponding to submatches of `org-clock-conv-tr-re.")
+
+(defun org-clock-goto-re-field (fieldname re fnames &optional errmsg)
+  "Move cursor to the specified FIELDNAME in the regexp RE.
+The fieldnames are given as a list of symbols in FNAMES.  An error message
+for the case of the regexp not matching can be passed in ERRMSG."
+  (let ((idx (or (cl-position fieldname fnames)
+		 (error "No such field name: %s" fieldname))))
+    (unless (looking-at re)
+      (error (or errmsg
+		 "Error: regexp for analyzing fields does not match here")))
+    (goto-char (match-beginning (1+ idx)))))
+
+(defun org-clock-conv-goto-tr-field (fieldname)
+  "Position point inside a field of the clocked time range in the current line.
+The field is defined by FIELDNAME and corresponds to one of the names
+in `org-clock-conv-tr-fields'."
+  (beginning-of-line)
+  (org-clock-goto-re-field fieldname org-clock-conv-tr-re org-clock-conv-tr-fields
+			   "Error: not on a clocked time log line"))
+
+(defun org-clock-conv-goto-agenda-tr-field (fieldname)
+  "Move cursor to the FIELDNAME of a agenda view clocked log line."
+  (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
+  (beginning-of-line)
+  (org-clock-goto-re-field fieldname org-clock-conv-clocked-agenda-re
+			   org-clock-conv-clocked-agenda-fields
+			   "Error: not on a clocked time log line"))
 
 (defun org-clock-conv-get-fieldname (point)
   "Return field name of time range where POINT is located.
 The field names are based of the sub-patterns defined by
-org-clock-conv-clocked-regexp.  The function can only be used
-in an agenda buffer."
+org-clock-conv-clocked-agenda-re.  The function can only be used
+in a log line of the agenda buffer."
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
   (save-excursion
     (beginning-of-line)
-    (cl-assert (looking-at org-clock-conv-clocked-regexp) nil
-	       "Error: not on a clocked time line"))
+    (cl-assert (looking-at org-clock-conv-clocked-agenda-re) nil
+	       "Error: not on a clocked time log line"))
   (cl-loop
-   for field in org-clock-conv-clocked-fields
+   for field in org-clock-conv-clocked-agenda-fields
    with cnt = 0
    do (cl-incf cnt)
    if (org-pos-in-match-range point cnt) return field
@@ -53,32 +94,10 @@ in an agenda buffer."
   )
 
 (defun org-clock-conv-at-timefield-p ()
-  "Return true if point is on a clocked time field in the agenda."
+  "Return true if point is on a clocked time field in the log agenda view."
   (pcase (org-clock-conv-get-fieldname (point))
     ((or `d1-hours `d2-hours `d1-minutes `d2-minutes) t)
     (default nil)))
-
-(defun org-clock-conv-goto-tr-field (fieldname)
-  "Position point inside a field of the time range in the current line.
-The field is defined by FIELDNAME."
-  (beginning-of-line)
-  (search-forward-regexp (concat org-clock-line-re " *")
-			 (line-end-position) t )
-  (let* ((d1-hours-re "[0-9]\\{4\\}-[0-9]\\{2\\}-[0-9]\\{2\\} +[^]+0-9>\r\n -]+ *")
-	 (d1-minutes-re (concat d1-hours-re "[0-9]\\{1,2\\}:"))
-	 (d2-hours-re (concat d1-minutes-re "[0-9]\\{1,2\\}\\]--\\[" d1-hours-re))
-	 (d2-minutes-re (concat d2-hours-re "[0-9]\\{1,2\\}:"))
-	 (rgx
-	  (pcase fieldname
-	    (`d1-hours d1-hours-re)
-	    (`d1-minutes d1-minutes-re)
-	    (`d2-hours d2-hours-re)
-	    (`d2-minutes d2-minutes-re)
-	    (default nil))))
-    (cl-assert rgx nil "Error: No such field name: %s" fieldname)
-    (unless
-	(search-forward-regexp rgx (line-end-position) t)
-      (error "Error: Cannot locate field %s on this line" fieldname))))
 
 (defun org-clock-conv-goto-ts ()
   "Goto to position in agenda file according to location of point."
@@ -139,6 +158,9 @@ the hour field, change the hour.  If it is on the minutes field,
 change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
   (org-clock-conv-timestamp-change (- (prefix-numeric-value arg))))
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun org-clock-conv-find-last-clockout (buffer)
   "Find the last clock-out time in BUFFER.
