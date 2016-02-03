@@ -28,7 +28,7 @@
 (require 'cl-lib)
 
 (defvar org-clock-conv-clocked-agenda-re
-  "^ +\\([^:]+\\): +\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\) +Clocked: +([0-9]+:[0-5][0-9])"
+  "^ +\\([^:]+\\): +\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-conv-clocked-agenda-fields
