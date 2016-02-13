@@ -212,12 +212,13 @@ change the minutes.  With prefix ARG, change by that many units."
   (org-clock-conv-timestamp-change (- (prefix-numeric-value arg))))
 
 (defun org-clock-conv-fill-gap ()
-  "Modify timestamp at point to connect to previous/next timerange.
+  "Modify timestamp at cursor to connect to previous/next timerange.
 Used from the agenda buffer by placing point on a log line of a
 clocked entry.  If point is on the start time, the start time will
 be modified to connect to the end time of the previous clocked
-task.  It works accordingly if point is on the end time of the
-current log entry.
+task.  If works accordingly if point is on the end time of the
+current log entry.  If there is no newer logged clock line, the
+end time will be set to the current time.
 
 For performance reasons the previous/next clock item is found
 based on a search for the previous/next clocked log line in the
@@ -239,7 +240,7 @@ the current agenda buffer."
       (pcase (cl-subseq (symbol-name fieldname) 0 3)
 	("d1-" (progn
 		 (setq tsname 'd2-timestamp tmname 'd2-time)
-		 (forward-line -1)
+		 (beginning-of-line)
 		 (unless (search-backward-regexp org-clock-conv-clocked-agenda-re
 						 (point-min) t)
 		   (error "Error: Cannot find previous log line in buffer"))))
@@ -248,25 +249,40 @@ the current agenda buffer."
 		 (forward-line 1)
 		 (unless (search-forward-regexp org-clock-conv-clocked-agenda-re
 						(point-max) t)
-		   (error "Error: Cannot find next log line in buffer"))))
+		   (setq tsname 'now tmname 'now))))
 	(default (error "Error: Not on a clock field in an agenda log line")))
-      (beginning-of-line)
-      (setq marker (or (org-get-at-bol 'org-marker)
-		       (org-agenda-error)))
-      (setq buffer (marker-buffer marker))
-      (set-buffer buffer)
-      (goto-char (marker-position marker))
-      (org-clock-conv-open-if-in-drawer)
-      (setq updated-ts (org-clock-conv-get-re-field tsname
-						    org-clock-conv-tr-re
-						    org-clock-conv-tr-fields)
-	    updated-time (replace-regexp-in-string
-			  " *" "" (org-clock-conv-get-re-field
-				   tmname
-				   org-clock-conv-tr-re
-				   org-clock-conv-tr-fields))))
+
+      (if (equal tsname 'now)
+	  (let ((time (current-time)))
+	    (setq updated-ts (format-time-string
+			      (concat "["
+				      (substring (cdr org-time-stamp-formats)
+						 1 -1)
+				      "]")
+			      time)
+		  updated-time (format-time-string "%H:%M" time)))
+	(beginning-of-line)
+	(setq marker (or (org-get-at-bol 'org-marker)
+			 (org-agenda-error)))
+	(setq buffer (marker-buffer marker))
+	(set-buffer buffer)
+	(goto-char (marker-position marker))
+	(org-clock-conv-open-if-in-drawer)
+	(setq updated-ts (concat "["
+				 (org-clock-conv-get-re-field tsname
+							      org-clock-conv-tr-re
+							      org-clock-conv-tr-fields)
+				 "]")
+	      updated-time (replace-regexp-in-string
+			    " *" "" (org-clock-conv-get-re-field
+				     tmname
+				     org-clock-conv-tr-re
+				     org-clock-conv-tr-fields)))))
     ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
     ;; 	     fieldname tsname updated-ts updated-time)
+    (setq marker (or (org-get-at-bol 'org-marker)
+		     (org-agenda-error)))
+    (setq buffer (marker-buffer marker))
     (org-with-remote-undo buffer
       (save-excursion
 	;; replace time in log line
@@ -278,7 +294,7 @@ the current agenda buffer."
 	(org-clock-conv-goto-ts)
 	(search-backward "[")
 	(search-forward-regexp org-ts-regexp-inactive)
-	(replace-match (concat "[" updated-ts "]"))))))
+	(replace-match (concat updated-ts))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
