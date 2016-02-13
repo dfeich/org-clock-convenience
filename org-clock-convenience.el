@@ -21,6 +21,14 @@
 ;;; Commentary:
 ;; Convenience functions for easier time tracking.  Provides commands
 ;; for changing timestamps directly from the agenda view.
+;;
+;; `org-clock-conv-timestamp-up' and `org-clock-conv-timestamp-down'
+;; can be used to modify the clocked times in and agenda log line
+;; in steps (same as on timestamps in a normal org file).
+;; `org-clock-conv-fill-gap' modifies the timestamp at point
+;; to connect to the previous/next clocked timestamp.
+;; Also provides a number of utility functions to work with and
+;; find/analyze timestamps.
 
 ;;; Code:
 (require 'org)
@@ -133,7 +141,10 @@ in a log line of the agenda buffer."
     (default nil)))
 
 (defun org-clock-conv-goto-ts ()
-  "Goto to position in agenda file according to location of point."
+  "From agenda log line goto to corresponding timestamp position in org file.
+
+Goto to position inside of the timestamp in the agenda file corresponding
+to the current position of point in the agenda log line."
   (interactive)
   (let* ((fieldname (or (org-clock-conv-get-agenda-tr-fieldname (point))
 			(error "Error: Not on a time range field position")))
@@ -200,6 +211,74 @@ change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
   (org-clock-conv-timestamp-change (- (prefix-numeric-value arg))))
 
+(defun org-clock-conv-fill-gap ()
+  "Modify timestamp at point to connect to previous/next timerange.
+Used from the agenda buffer by placing point on a log line of a
+clocked entry.  If point is on the start time, the start time will
+be modified to connect to the end time of the previous clocked
+task.  It works accordingly if point is on the end time of the
+current log entry.
+
+For performance reasons the previous/next clock item is found
+based on a search for the previous/next clocked log line in the
+agenda buffer, so it can only connect to a time range visible in
+the current agenda buffer."
+  (interactive)
+  (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
+  (let* ((fieldname (org-clock-conv-get-fieldname
+		     (point)
+		     org-clock-conv-clocked-agenda-re
+		     org-clock-conv-clocked-agenda-fields
+		     nil
+		     "Error: Not on an agenda clock log line."
+		     ))
+	 updated-ts updated-time marker buffer tsname tmname)
+    (save-excursion
+      ;; find next/previous log line and fetch the appropriate time
+      ;; stamp from the respective org file
+      (pcase (cl-subseq (symbol-name fieldname) 0 3)
+	("d1-" (progn
+		 (setq tsname 'd2-timestamp tmname 'd2-time)
+		 (forward-line -1)
+		 (unless (search-backward-regexp org-clock-conv-clocked-agenda-re
+						 (point-min) t)
+		   (error "Error: Cannot find previous log line in buffer"))))
+	("d2-" (progn
+		 (setq tsname 'd1-timestamp tmname 'd1-time)
+		 (forward-line 1)
+		 (unless (search-forward-regexp org-clock-conv-clocked-agenda-re
+						(point-max) t)
+		   (error "Error: Cannot find next log line in buffer"))))
+	(default (error "Error: Not on a clock field in an agenda log line")))
+      (beginning-of-line)
+      (setq marker (or (org-get-at-bol 'org-marker)
+		       (org-agenda-error)))
+      (setq buffer (marker-buffer marker))
+      (set-buffer buffer)
+      (goto-char (marker-position marker))
+      (org-clock-conv-open-if-in-drawer)
+      (setq updated-ts (org-clock-conv-get-re-field tsname
+						    org-clock-conv-tr-re
+						    org-clock-conv-tr-fields)
+	    updated-time (replace-regexp-in-string
+			  " *" "" (org-clock-conv-get-re-field
+				   tmname
+				   org-clock-conv-tr-re
+				   org-clock-conv-tr-fields))))
+    ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
+    ;; 	     fieldname tsname updated-ts updated-time)
+    (org-with-remote-undo buffer
+      (save-excursion
+	;; replace time in log line
+	(org-clock-conv-goto-agenda-tr-field fieldname)
+	(let ((inhibit-read-only t))
+	  (delete-char (length updated-time))
+	  (insert (propertize updated-time 'face 'secondary-selection)))
+	;; now replace timestamp in org file
+	(org-clock-conv-goto-ts)
+	(search-backward "[")
+	(search-forward-regexp org-ts-regexp-inactive)
+	(replace-match (concat "[" updated-ts "]"))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
