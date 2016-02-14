@@ -3,7 +3,7 @@
 #+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t
 #+OPTIONS: tags:t tasks:t tex:t timestamp:t title:t toc:nil todo:t |:t
 #+TITLE: Org-clock-convenience
-#+DATE: <2016-01-09 Sat>
+#+DATE: <2016-02-14 Sun>
 #+AUTHOR: Derek Feichtinger
 #+EMAIL: dfeich@gmail.com
 #+LANGUAGE: en
@@ -14,28 +14,39 @@
 * Introduction
 
   This is a collection of functions I am writing in order to make my
-  clocking workflows easier. It's not ready for publishing to MELPA.
+  clocking workflows easier.
 
-  It happens quite often that I get distracted by other tasks while
-  being clocked in. At the end of a day when I need to fill the gaps
-  and get the clocking consistent, I have to constantly jump between
-  the agenda view with the log lines (to see the surrounding tasks log
-  lines) and the org agenda file's clock lines in order to apply
-  changes.
+  My aim is to do as much of the clocking from the agenda buffer
+  without ever having to leave it, except to open a new task.
 
+  [[file:./org-clock-conv.gif]]
+
+
+* Motivation
+  It happens quite often that I get distracted by other tasks, e.g. a
+  colleague ivolving me in a longer discussion, while I am still
+  clocked in to the previous task. So, frequently I need to adapt the
+  clock history to fill gaps or to correct for tasks happening when I
+  was not in front of the screen. I want to have my whole day clocked
+  seemlessly, and I have done so over the last 4 years using Org.
+  Formerly, this involved a lot of jumping to the clock lines of org
+  files to adapt the timestamps, which is cumbersome and needs time.
+  
   I always wanted to have commands with which I can change the clock
   values directly *from the log lines in the agenda view* in the same
   way that one can change timestamps under the cursor inside of an org
   file using =org-timestamp-up= and =org-timestamp-down= (usually
   mapped to =<S-up>= and =<S-down>=).
 
-  Some of the available interactive functions
+*  Interactive functions
   - =org-clock-conv-timestamp-up= and =org-clock-conv-timestamp-down=:
     When on a /clocked/ line in the agenda buffer, this function will
     increase/decrease the time according to the position of the
     cursor. If the cursor is on the hour field, change the hour. If it
     is on the minutes field, change the minutes. Undo works on the
     agenda and on the source buffer.
+  - =org-clock-conv-fill-gap= modifies the timestamp at point to
+    connect to the previous/next logged timerange.
   - =org-clock-conv-goto-ts= goto the associated timestamp in the org
     file. Position the cursor respective to where the cursor was
     placed in the agenda view (e.g. on the minutes part of the
@@ -44,13 +55,35 @@
     clockout (this is based on a real search through the buffer and
     not based on the saved clockout value).
 
+  The package also contains a number of utility functions to associate
+  a list with fieldnames with the subgroup of a regular expression and
+  position point at a named field or read its value.
+
+* Installation
+
+  - I am currently preparing packaging for MELPA.
+  - You can always install the raw package an then do
+    #+BEGIN_SRC elisp :exports source
+      (require 'org-clock-convenience)
+    #+END_SRC
+
+  I did not include a minor mode, since I think that these commands will be bound
+  in a very individual way by users. I recommend defining a setup function and
+  adding it to the functions run by =org-agenda-mode-hook= like here:
+
+  #+BEGIN_SRC elisp :exports source
+    (defun dfeich/org-agenda-mode-fn ()
+      (define-key org-agenda-mode-map
+        (kbd "<S-up>") #'org-clock-conv-timestamp-up)
+      (define-key org-agenda-mode-map
+        (kbd "<S-down>") #'org-clock-conv-timestamp-down)
+      (define-key org-agenda-mode-map
+        (kbd "ö") #'org-clock-conv-fill-gap))
+    (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
+  #+END_SRC
+
 * Current shortcomings
-  - When changing the logged times using =org-clock-conv-timestamp-up=
-    and =org-clock-conv-timestamp-down=, the changes are now indicated
-    by a special font to display the changed fields. The agenda view
-    is only rebuilt upon user request (using =g= or =r=). For some
-    reason currently two rebuilds are needed before the agenda view is
-    updated. The first one does not seem to take effect. This is a
-    minor invonvenience.
+  - Agenda view sometimes needs two rebuilds after modifying. This is
+    a minor invonvenience, and I need to investigate.
      
   
