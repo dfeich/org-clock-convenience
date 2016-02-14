@@ -1,8 +1,9 @@
-;;; org-clock-convenience --- convenience functions for org time tracking
+;;; org-clock-convenience.el --- convenience functions for org time tracking
 
 ;; Author: Derek Feichtinger <dfeich.gmail.com>
 ;; Keywords: org
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
+;; Version: 1.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -294,7 +295,8 @@ the current agenda buffer."
 	(org-clock-conv-goto-ts)
 	(search-backward "[")
 	(search-forward-regexp org-ts-regexp-inactive)
-	(replace-match (concat updated-ts))))))
+	(replace-match (concat updated-ts))
+	(org-clock-update-time-maybe)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -61,6 +61,12 @@ mapped to `<S-up>` and `<S-down>`).
     clockout (this is based on a real search through the buffer and
     not based on the saved clockout value).
 
+Note that the agenda clock changing commands work with **undo** in the
+same way as other org agenda commands. They will undo in the agenda
+buffer as well as in the org source buffers. But if the agenda
+buffer is rebuilt after a change (e.g. by `g`), the undo information
+is lost.
+
 The package also contains a number of utility functions to associate
 a list with fieldnames with the subgroup of a regular expression and
 position point at a named field or read its value.
@@ -105,5 +111,11 @@ easy to just add the clocking-in as another possible action to the
 
 # Current shortcomings<a id="orgheadline6"></a>
 
--   Agenda view sometimes needs two rebuilds after modifying. This is
+-   Agenda view sometimes needs two rebuilds (using `g`) after modifying. This is
     a minor invonvenience, and I need to investigate.
+-   the calculated time span in the agenda buffer (the duration given
+    in parentheses in each clock line) is only corrected after the
+    user rebuilds the buffer. Since the changed fields are clearly marked by the
+    temporary font, and the time span is clearly not marked, this should not
+    confuse the user. I consider this secondary for the moment and will maybe
+    add it at some point.
