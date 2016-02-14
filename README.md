@@ -5,8 +5,12 @@
 <li><a href="#orgheadline1">1. Introduction</a></li>
 <li><a href="#orgheadline2">2. Motivation</a></li>
 <li><a href="#orgheadline3">3. Interactive functions</a></li>
-<li><a href="#orgheadline4">4. Installation</a></li>
-<li><a href="#orgheadline5">5. Current shortcomings</a></li>
+<li><a href="#orgheadline5">4. Installation</a>
+<ul>
+<li><a href="#orgheadline4">4.1. Tip: using helm for efficient clocking into tasks</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline6">5. Current shortcomings</a></li>
 </ul>
 </div>
 </div>
@@ -61,7 +65,7 @@ The package also contains a number of utility functions to associate
 a list with fieldnames with the subgroup of a regular expression and
 position point at a named field or read its value.
 
-# Installation<a id="orgheadline4"></a>
+# Installation<a id="orgheadline5"></a>
 
 -   I am currently preparing packaging for MELPA.
 -   You can always install the raw package an then do
@@ -81,7 +85,25 @@ adding it to the functions run by `org-agenda-mode-hook` like here:
         (kbd "ö") #'org-clock-conv-fill-gap))
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
 
-# Current shortcomings<a id="orgheadline5"></a>
+## Tip: using helm for efficient clocking into tasks<a id="orgheadline4"></a>
+
+In order not having to leave the agenda view for clocking into a
+task that is not displayed in some way in the agenda view (where
+you could use `I` with cursor on the task), I customize [helm](https://emacs-helm.github.io/helm/). It is
+easy to just add the clocking-in as another possible action to the
+`helm-org-agenda-files-headings` command:
+
+    (defun dfeich/helm-org-clock-in (marker)
+      "Clock into the item at MARKER"
+      (with-current-buffer (marker-buffer marker)
+        (goto-char (marker-position marker))
+        (org-clock-in)))
+    (eval-after-load 'helm-org
+      '(nconc helm-org-headings-actions
+              (list
+               (cons "Clock into task" #'dfeich/helm-org-clock-in))))
+
+# Current shortcomings<a id="orgheadline6"></a>
 
 -   Agenda view sometimes needs two rebuilds after modifying. This is
     a minor invonvenience, and I need to investigate.

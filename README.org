@@ -82,6 +82,26 @@
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
   #+END_SRC
 
+** Tip: using helm for efficient clocking into tasks
+
+   In order not having to leave the agenda view for clocking into a
+   task that is not displayed in some way in the agenda view (where
+   you could use =I= with cursor on the task), I customize [[https://emacs-helm.github.io/helm/][helm]]. It is
+   easy to just add the clocking-in as another possible action to the
+   =helm-org-agenda-files-headings= command:
+   
+   #+BEGIN_SRC emacs-lisp :exports source
+     (defun dfeich/helm-org-clock-in (marker)
+       "Clock into the item at MARKER"
+       (with-current-buffer (marker-buffer marker)
+         (goto-char (marker-position marker))
+         (org-clock-in)))
+     (eval-after-load 'helm-org
+       '(nconc helm-org-headings-actions
+               (list
+                (cons "Clock into task" #'dfeich/helm-org-clock-in))))
+   #+END_SRC
+  
 * Current shortcomings
   - Agenda view sometimes needs two rebuilds after modifying. This is
     a minor invonvenience, and I need to investigate.
