@@ -63,7 +63,7 @@
 
   - I am currently preparing packaging for MELPA.
   - You can always install the raw package an then do
-    #+BEGIN_SRC elisp :exports source
+    #+BEGIN_SRC emacs-lisp :exports source
       (require 'org-clock-convenience)
     #+END_SRC
 
@@ -71,7 +71,7 @@
   in a very individual way by users. I recommend defining a setup function and
   adding it to the functions run by =org-agenda-mode-hook= like here:
 
-  #+BEGIN_SRC elisp :exports source
+  #+BEGIN_SRC emacs-lisp :exports source
     (defun dfeich/org-agenda-mode-fn ()
       (define-key org-agenda-mode-map
         (kbd "<S-up>") #'org-clock-conv-timestamp-up)
