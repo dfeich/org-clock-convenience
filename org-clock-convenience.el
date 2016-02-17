@@ -2,8 +2,9 @@
 
 ;; Author: Derek Feichtinger <dfeich.gmail.com>
 ;; Keywords: org
+;; Package-Requires: ((cl-lib "0.5") (org "8") (emacs "24.3"))
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
-;; Version: 1.0
+;; Version: 1.1
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -23,10 +24,10 @@
 ;; Convenience functions for easier time tracking.  Provides commands
 ;; for changing timestamps directly from the agenda view.
 ;;
-;; `org-clock-conv-timestamp-up' and `org-clock-conv-timestamp-down'
+;; `org-clock-convenience-timestamp-up' and `org-clock-convenience-timestamp-down'
 ;; can be used to modify the clocked times in and agenda log line
 ;; in steps (same as on timestamps in a normal org file).
-;; `org-clock-conv-fill-gap' modifies the timestamp at point
+;; `org-clock-convenience-fill-gap' modifies the timestamp at point
 ;; to connect to the previous/next clocked timestamp.
 ;; Also provides a number of utility functions to work with and
 ;; find/analyze timestamps.
@@ -36,15 +37,15 @@
 (require 'org-element)
 (require 'cl-lib)
 
-(defvar org-clock-conv-clocked-agenda-re
+(defvar org-clock-convenience-clocked-agenda-re
   "^ +\\([^:]+\\): +\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
-(defvar org-clock-conv-clocked-agenda-fields
+(defvar org-clock-convenience-clocked-agenda-fields
   '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes duration)
-  "Field names corresponding to submatches of `org-clock-conv-clocked-agenda-re'.")
+  "Field names corresponding to submatches of `org-clock-convenience-clocked-agenda-re'.")
 
-(defvar org-clock-conv-tr-re
+(defvar org-clock-convenience-tr-re
   (concat " *CLOCK: *\\["
 	  org-ts-regexp0 "\\]\\(?:--\\[\\)?"
 	  org-ts-regexp0 "?"
@@ -56,13 +57,13 @@ match:    CLOCK: [2016-01-08 Fri 14:30]--[2016-01-08] => -14:30
 match:    CLOCK: [2016-01-08 Fri 10:30]
 no:       CLOCK: [2016-01-08 Fri 10:30] => 2:30")
 
-(defvar org-clock-conv-tr-fields
+(defvar org-clock-convenience-tr-fields
   '(d1-timestamp d1-year d1-month d1-day d1-dayname d1-time d1-hours d1-minutes
 		 d2-timestamp d2-year d2-month d2-day d2-dayname d2-time d2-hours d2-minutes
 		 sum)
-  "Field names corresponding to submatches of `org-clock-conv-tr-re.")
+  "Field names corresponding to submatches of `org-clock-convenience-tr-re.")
 
-(defun org-clock-conv-goto-re-field (fieldname re fnames &optional errmsg)
+(defun org-clock-convenience-goto-re-field (fieldname re fnames &optional errmsg)
   "Move cursor to the specified FIELDNAME in the regexp RE.
 The fieldnames are given as a list of symbols in FNAMES.  An error message
 for the case of the regexp not matching can be passed in ERRMSG."
@@ -73,7 +74,7 @@ for the case of the regexp not matching can be passed in ERRMSG."
 		 "Error: regexp for analyzing fields does not match here")))
     (goto-char (match-beginning (1+ idx)))))
 
-(defun org-clock-conv-get-re-field (fieldname re fnames &optional errmsg)
+(defun org-clock-convenience-get-re-field (fieldname re fnames &optional errmsg)
   "Return contents of field FIELDNAME defined by the regexp RE.
 The fieldnames are given as a list of symbols in FNAMES.  An error message
 for the case of the regexp not matching can be passed in ERRMSG."
@@ -84,7 +85,7 @@ for the case of the regexp not matching can be passed in ERRMSG."
 		 "Error: regexp for analyzing fields does not match here")))
     (match-string (1+ idx))))
 
-(defun org-clock-conv-get-fieldname (point re fnames &optional ignore-lst errmsg)
+(defun org-clock-convenience-get-fieldname (point re fnames &optional ignore-lst errmsg)
   "Return field name of submatch where POINT is located.
 The field names are based of the sub-patterns defined by the
 regexp RE and the passed field names list FNAMES.  RE must match
@@ -107,47 +108,47 @@ specifying an error message if RE is not matching."
    return field
    finally return nil))
 
-(defun org-clock-conv-goto-tr-field (fieldname)
+(defun org-clock-convenience-goto-tr-field (fieldname)
   "Position point inside a field of the clocked time range in the current line.
 The field is defined by FIELDNAME and corresponds to one of the names
-in `org-clock-conv-tr-fields'."
+in `org-clock-convenience-tr-fields'."
   (beginning-of-line)
-  (org-clock-conv-goto-re-field fieldname org-clock-conv-tr-re org-clock-conv-tr-fields
-				"Error: not on a clocked time log line"))
+  (org-clock-convenience-goto-re-field fieldname org-clock-convenience-tr-re org-clock-convenience-tr-fields
+				       "Error: not on a clocked time log line"))
 
-(defun org-clock-conv-goto-agenda-tr-field (fieldname)
+(defun org-clock-convenience-goto-agenda-tr-field (fieldname)
   "Move cursor to the FIELDNAME of a agenda view clocked log line."
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
   (beginning-of-line)
-  (org-clock-conv-goto-re-field fieldname org-clock-conv-clocked-agenda-re
-				org-clock-conv-clocked-agenda-fields
-				"Error: not on a clocked time log line"))
+  (org-clock-convenience-goto-re-field fieldname org-clock-convenience-clocked-agenda-re
+				       org-clock-convenience-clocked-agenda-fields
+				       "Error: not on a clocked time log line"))
 
-(defun org-clock-conv-get-agenda-tr-fieldname (point)
+(defun org-clock-convenience-get-agenda-tr-fieldname (point)
   "Return field name of time range where POINT is located.
 The field names are based of the sub-patterns defined by
-org-clock-conv-clocked-agenda-re.  The function can only be used
+org-clock-convenience-clocked-agenda-re.  The function can only be used
 in a log line of the agenda buffer."
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
-  (org-clock-conv-get-fieldname point
-				org-clock-conv-clocked-agenda-re
-				org-clock-conv-clocked-agenda-fields
-				'(d1-time d2-time)
-				"Error: not on a clocked time log line"))
+  (org-clock-convenience-get-fieldname point
+				       org-clock-convenience-clocked-agenda-re
+				       org-clock-convenience-clocked-agenda-fields
+				       '(d1-time d2-time)
+				       "Error: not on a clocked time log line"))
 
-(defun org-clock-conv-at-timefield-p ()
+(defun org-clock-convenience-at-timefield-p ()
   "Return true if point is on a clocked time field in the log agenda view."
-  (pcase (org-clock-conv-get-agenda-tr-fieldname (point))
+  (pcase (org-clock-convenience-get-agenda-tr-fieldname (point))
     ((or `d1-hours `d2-hours `d1-minutes `d2-minutes) t)
     (default nil)))
 
-(defun org-clock-conv-goto-ts ()
+(defun org-clock-convenience-goto-ts ()
   "From agenda log line goto to corresponding timestamp position in org file.
 
 Goto to position inside of the timestamp in the agenda file corresponding
 to the current position of point in the agenda log line."
   (interactive)
-  (let* ((fieldname (or (org-clock-conv-get-agenda-tr-fieldname (point))
+  (let* ((fieldname (or (org-clock-convenience-get-agenda-tr-fieldname (point))
 			(error "Error: Not on a time range field position")))
 	 (marker (or (org-get-at-bol 'org-marker)
 		     (org-agenda-error)))
@@ -157,12 +158,12 @@ to the current position of point in the agenda log line."
 	(switch-to-buffer buffer)
       (set-buffer buffer))
     (goto-char pos)
-    (org-clock-conv-open-if-in-drawer)
-    (org-clock-conv-goto-tr-field fieldname)))
+    (org-clock-convenience-open-if-in-drawer)
+    (org-clock-convenience-goto-tr-field fieldname)))
 
 ;; TODO: why do I need to hit g twice (rebuild agenda buffer) before I
 ;; can see the changes take effect?
-(defun org-clock-conv-timestamp-change (n)
+(defun org-clock-convenience-timestamp-change (n)
   "Change timestamp by N in agenda buffer.
 The change is carried out in the respective clock line of the
 associated org agenda file."
@@ -170,14 +171,14 @@ associated org agenda file."
 	 (marker (or (org-get-at-bol 'org-marker)
 		     (org-agenda-error)))
 	 (buffer (marker-buffer marker))
-	 (fieldname (org-clock-conv-get-agenda-tr-fieldname (point)))
+	 (fieldname (org-clock-convenience-get-agenda-tr-fieldname (point)))
 	 timefield updated-time)
     (org-with-remote-undo buffer
       (save-excursion
-	(org-clock-conv-goto-ts)
+	(org-clock-convenience-goto-ts)
 	(org-timestamp-change n nil 'updown)
 	(beginning-of-line)
-	(looking-at org-clock-conv-tr-re)
+	(looking-at org-clock-convenience-tr-re)
 	(setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
 			  ("d1-" 'd1-time)
 			  ("d2-" 'd2-time)))
@@ -185,10 +186,10 @@ associated org agenda file."
 	;; the org-ts-regexp0 defines the leading space to be part of the pattern
 	(setq updated-time
 	      (replace-regexp-in-string " *" ""
-					(org-clock-conv-get-re-field timefield
-								     org-clock-conv-tr-re
-								     org-clock-conv-tr-fields))))
-      (org-clock-conv-goto-agenda-tr-field timefield)
+					(org-clock-convenience-get-re-field timefield
+									    org-clock-convenience-tr-re
+									    org-clock-convenience-tr-fields))))
+      (org-clock-convenience-goto-agenda-tr-field timefield)
       (let ((inhibit-read-only t))
 	(delete-char (length updated-time))
 	(insert (propertize updated-time 'face 'secondary-selection))))
@@ -196,23 +197,23 @@ associated org agenda file."
     )
   )
 
-(defun org-clock-conv-timestamp-up (&optional arg)
+(defun org-clock-convenience-timestamp-up (&optional arg)
   "Increase the date item at the cursor by one.
 Used in a clocked line from the agenda view.  If the cursor is on
 the hour field, change the hour.  If it is on the minutes field,
 change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
-  (org-clock-conv-timestamp-change (prefix-numeric-value arg)))
+  (org-clock-convenience-timestamp-change (prefix-numeric-value arg)))
 
-(defun org-clock-conv-timestamp-down (&optional arg)
+(defun org-clock-convenience-timestamp-down (&optional arg)
   "Increase the date item at the cursor by one.
 Used in a clocked line from the agenda view.  If the cursor is on
 the hour field, change the hour.  If it is on the minutes field,
 change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
-  (org-clock-conv-timestamp-change (- (prefix-numeric-value arg))))
+  (org-clock-convenience-timestamp-change (- (prefix-numeric-value arg))))
 
-(defun org-clock-conv-fill-gap ()
+(defun org-clock-convenience-fill-gap ()
   "Modify timestamp at cursor to connect to previous/next timerange.
 Used from the agenda buffer by placing point on a log line of a
 clocked entry.  If point is on the start time, the start time will
@@ -227,10 +228,10 @@ agenda buffer, so it can only connect to a time range visible in
 the current agenda buffer."
   (interactive)
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
-  (let* ((fieldname (org-clock-conv-get-fieldname
+  (let* ((fieldname (org-clock-convenience-get-fieldname
 		     (point)
-		     org-clock-conv-clocked-agenda-re
-		     org-clock-conv-clocked-agenda-fields
+		     org-clock-convenience-clocked-agenda-re
+		     org-clock-convenience-clocked-agenda-fields
 		     nil
 		     "Error: Not on an agenda clock log line."
 		     ))
@@ -242,13 +243,13 @@ the current agenda buffer."
 	("d1-" (progn
 		 (setq tsname 'd2-timestamp tmname 'd2-time)
 		 (beginning-of-line)
-		 (unless (search-backward-regexp org-clock-conv-clocked-agenda-re
+		 (unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
 						 (point-min) t)
 		   (error "Error: Cannot find previous log line in buffer"))))
 	("d2-" (progn
 		 (setq tsname 'd1-timestamp tmname 'd1-time)
 		 (forward-line 1)
-		 (unless (search-forward-regexp org-clock-conv-clocked-agenda-re
+		 (unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
 						(point-max) t)
 		   (setq tsname 'now tmname 'now))))
 	(default (error "Error: Not on a clock field in an agenda log line")))
@@ -268,17 +269,17 @@ the current agenda buffer."
 	(setq buffer (marker-buffer marker))
 	(set-buffer buffer)
 	(goto-char (marker-position marker))
-	(org-clock-conv-open-if-in-drawer)
+	(org-clock-convenience-open-if-in-drawer)
 	(setq updated-ts (concat "["
-				 (org-clock-conv-get-re-field tsname
-							      org-clock-conv-tr-re
-							      org-clock-conv-tr-fields)
+				 (org-clock-convenience-get-re-field tsname
+								     org-clock-convenience-tr-re
+								     org-clock-convenience-tr-fields)
 				 "]")
 	      updated-time (replace-regexp-in-string
-			    " *" "" (org-clock-conv-get-re-field
+			    " *" "" (org-clock-convenience-get-re-field
 				     tmname
-				     org-clock-conv-tr-re
-				     org-clock-conv-tr-fields)))))
+				     org-clock-convenience-tr-re
+				     org-clock-convenience-tr-fields)))))
     ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
     ;; 	     fieldname tsname updated-ts updated-time)
     (setq marker (or (org-get-at-bol 'org-marker)
@@ -287,12 +288,12 @@ the current agenda buffer."
     (org-with-remote-undo buffer
       (save-excursion
 	;; replace time in log line
-	(org-clock-conv-goto-agenda-tr-field fieldname)
+	(org-clock-convenience-goto-agenda-tr-field fieldname)
 	(let ((inhibit-read-only t))
 	  (delete-char (length updated-time))
 	  (insert (propertize updated-time 'face 'secondary-selection)))
 	;; now replace timestamp in org file
-	(org-clock-conv-goto-ts)
+	(org-clock-convenience-goto-ts)
 	(search-backward "[")
 	(search-forward-regexp org-ts-regexp-inactive)
 	(replace-match (concat updated-ts))
@@ -300,7 +301,7 @@ the current agenda buffer."
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun org-clock-conv-find-last-clockout (buffer)
+(defun org-clock-convenience-find-last-clockout (buffer)
   "Find the last clock-out time in BUFFER.
 Return position, time string, and headline in a list"
   (with-current-buffer buffer
@@ -334,7 +335,7 @@ Return position, time string, and headline in a list"
 		   ;;finally return (list mx hitlist clocklist)
 		   finally return mx))))))
 
-(defun org-clock-conv-open-if-in-drawer ()
+(defun org-clock-convenience-open-if-in-drawer ()
   "If pos is within drawer, open the drawer."
   (let ((element (org-element-at-point)))
     (while (and element
@@ -347,14 +348,14 @@ Return position, time string, and headline in a list"
 	(org-flag-drawer nil)
 	(goto-char pos)))))
 
-(defun org-clock-conv-goto-last-clockout (&optional buffer)
+(defun org-clock-convenience-goto-last-clockout (&optional buffer)
   "Jump to the position of the last clockout in BUFFER."
   (interactive)
   (let* ((buf (switch-to-buffer (or buffer (current-buffer))))
-	 (mark (car (org-clock-conv-find-last-clockout buf))))
+	 (mark (car (org-clock-convenience-find-last-clockout buf))))
     (org-goto-marker-or-bmk mark)
     (org-reveal)
-    (org-clock-conv-open-if-in-drawer)))
+    (org-clock-convenience-open-if-in-drawer)))
 
 
 (provide 'org-clock-convenience)
