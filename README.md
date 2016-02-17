@@ -1,22 +1,6 @@
-<div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#orgheadline1">1. Introduction</a></li>
-<li><a href="#orgheadline2">2. Motivation</a></li>
-<li><a href="#orgheadline3">3. Interactive functions</a></li>
-<li><a href="#orgheadline5">4. Installation</a>
-<ul>
-<li><a href="#orgheadline4">4.1. Tip: using helm for efficient clocking into tasks</a></li>
-</ul>
-</li>
-<li><a href="#orgheadline6">5. Current shortcomings</a></li>
-</ul>
-</div>
-</div>
+# org-clock-convenience
 
-
-# Introduction<a id="orgheadline1"></a>
+[![img](http://melpa.org/packages/org-clock-convenience-badge.svg)](http://melpa.org/#/org-clock-convenience)
 
 This is a collection of functions I am writing in order to make my
 clocking work-flows easier.
@@ -26,7 +10,24 @@ without ever having to leave it, except to open a new task.
 
 ![img](./org-clock-conv.gif)
 
-# Motivation<a id="orgheadline2"></a>
+<div id="table-of-contents">
+<h2>Table of Contents</h2>
+<div id="text-table-of-contents">
+<ul>
+<li><a href="#orgheadline1">1. org-clock-convenience</a></li>
+<li><a href="#orgheadline2">2. Motivation</a></li>
+<li><a href="#orgheadline3">3. Interactive functions</a></li>
+<li><a href="#orgheadline4">4. Installation</a>
+<ul>
+<li><a href="#orgheadline5">4.1. Tip: using helm for efficient clocking into tasks</a></li>
+</ul>
+</li>
+<li><a href="#orgheadline6">5. Current shortcomings</a></li>
+</ul>
+</div>
+</div>
+
+# Motivation
 
 It happens quite often that I get distracted by other tasks, e.g. a
 colleague involving me in a longer discussion, while I am still
@@ -43,7 +44,7 @@ way that one can change timestamps under the cursor inside of an org
 file using `org-timestamp-up` and `org-timestamp-down` (usually
 mapped to `<S-up>` and `<S-down>`).
 
-# Interactive functions<a id="orgheadline3"></a>
+# Interactive functions
 
 -   `org-clock-convenience-timestamp-up` and `org-clock-convenience-timestamp-down`:
     When on a *clocked* line in the agenda buffer, this function will
@@ -71,7 +72,7 @@ The package also contains a number of utility functions to associate
 a list with field names with the subgroup of a regular expression and
 position point at a named field or read its value.
 
-# Installation<a id="orgheadline5"></a>
+# Installation
 
 -   The package is available from [MELPA](http://melpa.org).
 -   You can always install the raw package an then do
@@ -91,7 +92,7 @@ adding it to the functions run by `org-agenda-mode-hook` like here:
         (kbd "ö") #'org-clock-convenience-fill-gap))
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
 
-## Tip: using helm for efficient clocking into tasks<a id="orgheadline4"></a>
+## Tip: using helm for efficient clocking into tasks
 
 In order not having to leave the agenda view for clocking into a
 task that is not displayed in some way in the agenda view (where
@@ -109,7 +110,7 @@ easy to just add the clocking-in as another possible action to the
               (list
                (cons "Clock into task" #'dfeich/helm-org-clock-in))))
 
-# Current shortcomings<a id="orgheadline6"></a>
+# Current shortcomings
 
 -   Agenda view sometimes needs two rebuilds (using `g`) after modifying. This is
     a minor inconvenience, and I need to investigate.

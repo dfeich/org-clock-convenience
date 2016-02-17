@@ -1,7 +1,7 @@
 #+OPTIONS: ':nil *:t -:t ::t <:t H:3 \n:nil ^:t arch:headline
 #+OPTIONS: author:t c:nil creator:nil d:(not "LOGBOOK") date:t e:t
 #+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t
-#+OPTIONS: tags:t tasks:t tex:t timestamp:t title:t toc:t todo:t |:t
+#+OPTIONS: tags:t tasks:t tex:t timestamp:t title:t toc:nil todo:t |:t
 #+TITLE: Org-clock-convenience
 #+DATE: <2016-02-14 Sun>
 #+AUTHOR: Derek Feichtinger
@@ -11,7 +11,9 @@
 #+EXCLUDE_TAGS: noexport
 #+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
 
-* Introduction
+* org-clock-convenience
+
+  [[http://melpa.org/#/org-clock-convenience][file:http://melpa.org/packages/org-clock-convenience-badge.svg]]
 
   This is a collection of functions I am writing in order to make my
   clocking work-flows easier.
@@ -21,6 +23,7 @@
 
   [[file:./org-clock-conv.gif]]
 
+  #+TOC: :headlines 2
 
 * Motivation
   It happens quite often that I get distracted by other tasks, e.g. a
