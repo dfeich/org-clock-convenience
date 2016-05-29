@@ -71,7 +71,7 @@
 * Installation
 
   - The package is available from [[http://melpa.org][MELPA]].
-  - You can always install the raw package an then do
+  - You can always install the raw package and then do
     #+BEGIN_SRC emacs-lisp :exports source
       (require 'org-clock-convenience)
     #+END_SRC
@@ -91,7 +91,7 @@
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
   #+END_SRC
 
-** Tip: using helm for efficient clocking into tasks
+** Tip: using helm for efficiently clocking into tasks
 
    In order not having to leave the agenda view for clocking into a
    task that is not displayed in some way in the agenda view (where

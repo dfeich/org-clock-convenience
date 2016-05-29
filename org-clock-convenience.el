@@ -37,6 +37,13 @@
 (require 'org-element)
 (require 'cl-lib)
 
+;; save-mark-and-excursion in Emacs 25 works like save-excursion did before
+(eval-when-compile
+  (when (< emacs-major-version 25)
+    (defmacro save-mark-and-excursion (&rest body)
+      `(save-excursion ,@body))))
+
+
 (defvar org-clock-convenience-clocked-agenda-re
   "^ +\\([^:]+\\): +\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
@@ -94,11 +101,11 @@ contain a list of submatch field names to ignore (sometimes there
 are subpattern which contain several other subpatterns, and one
 wants only the names of the smaller subpatterns).  ERRMSG allows
 specifying an error message if RE is not matching."
-  (save-excursion
-    (beginning-of-line)
-    (cl-assert (looking-at re) nil
-	       (or errmsg
-		   "Error: regexp for analyzing fields does not match here")))
+  (save-mark-and-excursion
+   (beginning-of-line)
+   (cl-assert (looking-at re) nil
+	      (or errmsg
+		  "Error: regexp for analyzing fields does not match here")))
   (cl-loop
    for field in fnames
    with cnt = 0
@@ -174,21 +181,21 @@ associated org agenda file."
 	 (fieldname (org-clock-convenience-get-agenda-tr-fieldname (point)))
 	 timefield updated-time)
     (org-with-remote-undo buffer
-      (save-excursion
-	(org-clock-convenience-goto-ts)
-	(org-timestamp-change n nil 'updown)
-	(beginning-of-line)
-	(looking-at org-clock-convenience-tr-re)
-	(setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
-			  ("d1-" 'd1-time)
-			  ("d2-" 'd2-time)))
-	;; a bit ugly. regrettably need to replace the leading space, because
-	;; the org-ts-regexp0 defines the leading space to be part of the pattern
-	(setq updated-time
-	      (replace-regexp-in-string " *" ""
-					(org-clock-convenience-get-re-field timefield
-									    org-clock-convenience-tr-re
-									    org-clock-convenience-tr-fields))))
+      (save-mark-and-excursion
+       (org-clock-convenience-goto-ts)
+       (org-timestamp-change n nil 'updown)
+       (beginning-of-line)
+       (looking-at org-clock-convenience-tr-re)
+       (setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
+			 ("d1-" 'd1-time)
+			 ("d2-" 'd2-time)))
+       ;; a bit ugly. regrettably need to replace the leading space, because
+       ;; the org-ts-regexp0 defines the leading space to be part of the pattern
+       (setq updated-time
+	     (replace-regexp-in-string " *" ""
+				       (org-clock-convenience-get-re-field timefield
+									   org-clock-convenience-tr-re
+									   org-clock-convenience-tr-fields))))
       (org-clock-convenience-goto-agenda-tr-field timefield)
       (let ((inhibit-read-only t))
 	(delete-char (length updated-time))
@@ -236,68 +243,69 @@ the current agenda buffer."
 		     "Error: Not on an agenda clock log line."
 		     ))
 	 updated-ts updated-time marker buffer tsname tmname)
-    (save-excursion
-      ;; find next/previous log line and fetch the appropriate time
-      ;; stamp from the respective org file
-      (pcase (cl-subseq (symbol-name fieldname) 0 3)
-	("d1-" (progn
-		 (setq tsname 'd2-timestamp tmname 'd2-time)
-		 (beginning-of-line)
-		 (unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
-						 (point-min) t)
-		   (error "Error: Cannot find previous log line in buffer"))))
-	("d2-" (progn
-		 (setq tsname 'd1-timestamp tmname 'd1-time)
-		 (forward-line 1)
-		 (unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
-						(point-max) t)
-		   (setq tsname 'now tmname 'now))))
-	(default (error "Error: Not on a clock field in an agenda log line")))
+    (save-mark-and-excursion
+     ;; find next/previous log line and fetch the appropriate time
+     ;; stamp from the respective org file
+     (pcase (cl-subseq (symbol-name fieldname) 0 3)
+       ("d1-" (progn
+		(setq tsname 'd2-timestamp tmname 'd2-time)
+		(beginning-of-line)
+		(unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
+						(point-min) t)
+		  (error "Error: Cannot find previous log line in buffer"))))
+       ("d2-" (progn
+		(setq tsname 'd1-timestamp tmname 'd1-time)
+		(forward-line 1)
+		(unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
+					       (point-max) t)
+		  (setq tsname 'now tmname 'now))))
+       (default (error "Error: Not on a clock field in an agenda log line")))
 
-      (if (equal tsname 'now)
-	  (let ((time (current-time)))
-	    (setq updated-ts (format-time-string
-			      (concat "["
-				      (substring (cdr org-time-stamp-formats)
-						 1 -1)
-				      "]")
-			      time)
-		  updated-time (format-time-string "%H:%M" time)))
-	(beginning-of-line)
-	(setq marker (or (org-get-at-bol 'org-marker)
-			 (org-agenda-error)))
-	(setq buffer (marker-buffer marker))
-	(set-buffer buffer)
-	(goto-char (marker-position marker))
-	(org-clock-convenience-open-if-in-drawer)
-	(setq updated-ts (concat "["
-				 (org-clock-convenience-get-re-field tsname
-								     org-clock-convenience-tr-re
-								     org-clock-convenience-tr-fields)
-				 "]")
-	      updated-time (replace-regexp-in-string
-			    " *" "" (org-clock-convenience-get-re-field
-				     tmname
-				     org-clock-convenience-tr-re
-				     org-clock-convenience-tr-fields)))))
+     (if (equal tsname 'now)
+	 (let ((time (current-time)))
+	   (setq updated-ts (format-time-string
+			     (concat "["
+				     (substring (cdr org-time-stamp-formats)
+						1 -1)
+				     "]")
+			     time)
+		 updated-time (format-time-string "%H:%M" time)))
+       (beginning-of-line)
+       (setq marker (or (org-get-at-bol 'org-marker)
+			(org-agenda-error)))
+       (setq buffer (marker-buffer marker))
+       (set-buffer buffer)
+       (goto-char (marker-position marker))
+       (org-clock-convenience-open-if-in-drawer)
+       (setq updated-ts (concat "["
+				(org-clock-convenience-get-re-field
+				 tsname
+				 org-clock-convenience-tr-re
+				 org-clock-convenience-tr-fields)
+				"]")
+	     updated-time (replace-regexp-in-string
+			   " *" "" (org-clock-convenience-get-re-field
+				    tmname
+				    org-clock-convenience-tr-re
+				    org-clock-convenience-tr-fields)))))
     ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
     ;; 	     fieldname tsname updated-ts updated-time)
     (setq marker (or (org-get-at-bol 'org-marker)
 		     (org-agenda-error)))
     (setq buffer (marker-buffer marker))
     (org-with-remote-undo buffer
-      (save-excursion
-	;; replace time in log line
-	(org-clock-convenience-goto-agenda-tr-field fieldname)
-	(let ((inhibit-read-only t))
-	  (delete-char (length updated-time))
-	  (insert (propertize updated-time 'face 'secondary-selection)))
-	;; now replace timestamp in org file
-	(org-clock-convenience-goto-ts)
-	(search-backward "[")
-	(search-forward-regexp org-ts-regexp-inactive)
-	(replace-match (concat updated-ts))
-	(org-clock-update-time-maybe)))))
+      (save-mark-and-excursion
+       ;; replace time in log line
+       (org-clock-convenience-goto-agenda-tr-field fieldname)
+       (let ((inhibit-read-only t))
+	 (delete-char (length updated-time))
+	 (insert (propertize updated-time 'face 'secondary-selection)))
+       ;; now replace timestamp in org file
+       (org-clock-convenience-goto-ts)
+       (search-backward "[")
+       (search-forward-regexp org-ts-regexp-inactive)
+       (replace-match (concat updated-ts))
+       (org-clock-update-time-maybe)))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -305,35 +313,35 @@ the current agenda buffer."
   "Find the last clock-out time in BUFFER.
 Return position, time string, and headline in a list"
   (with-current-buffer buffer
-    (save-excursion
-      (save-restriction
-	(widen)
-	(let* ((cpattern (concat "^ *" org-clock-string
-				 ".*\\]--\\(\\[[^]]+\\]\\)"))
-	       (parsetree (org-element-parse-buffer 'headline))
-	       (clocklist
-		(org-element-map parsetree 'headline
-		  (lambda (hl)
-		    (goto-char (org-element-property :begin hl))
-		    (let* ((end (org-element-property :end hl))
-			   (srend (save-excursion (end-of-line)
-						  (or (re-search-forward "^\\\*" end t)
-						      end))))
-		      (if (re-search-forward cpattern srend t)
-					;(list (point) (org-time-string-to-time (match-string 1)))
-			  (list
-			   (copy-marker  (- (point)
-					    (length (match-string-no-properties 1))))
-			   (match-string-no-properties 1)
-			   (org-element-property :title hl))
-			nil))))))
-	  (cl-loop with mx = (list 0 "<1970-01-02 Thu>")
-		   for elem in clocklist
-		   if (org-time> (nth 1 elem) (nth 1 mx))
-		   do (setq mx elem)
-		   ;;and collect mx into hitlist
-		   ;;finally return (list mx hitlist clocklist)
-		   finally return mx))))))
+    (save-mark-and-excursion
+     (save-restriction
+       (widen)
+       (let* ((cpattern (concat "^ *" org-clock-string
+				".*\\]--\\(\\[[^]]+\\]\\)"))
+	      (parsetree (org-element-parse-buffer 'headline))
+	      (clocklist
+	       (org-element-map parsetree 'headline
+		 (lambda (hl)
+		   (goto-char (org-element-property :begin hl))
+		   (let* ((end (org-element-property :end hl))
+			  (srend
+			   (save-mark-and-excursion (end-of-line)
+						    (or (re-search-forward "^\\\*" end t)
+							end))))
+		     (if (re-search-forward cpattern srend t)
+			 (list
+			  (copy-marker  (- (point)
+					   (length (match-string-no-properties 1))))
+			  (match-string-no-properties 1)
+			  (org-element-property :title hl))
+		       nil))))))
+	 (cl-loop with mx = (list 0 "<1970-01-02 Thu>")
+		  for elem in clocklist
+		  if (org-time> (nth 1 elem) (nth 1 mx))
+		  do (setq mx elem)
+		  ;;and collect mx into hitlist
+		  ;;finally return (list mx hitlist clocklist)
+		  finally return mx))))))
 
 (defun org-clock-convenience-open-if-in-drawer ()
   "If pos is within drawer, open the drawer."
