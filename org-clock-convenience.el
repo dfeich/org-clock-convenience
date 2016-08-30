@@ -4,7 +4,7 @@
 ;; Keywords: org
 ;; Package-Requires: ((cl-lib "0.5") (org "8") (emacs "24.3"))
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
-;; Version: 1.1
+;; Version: 1.2
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,13 +24,16 @@
 ;; Convenience functions for easier time tracking.  Provides commands
 ;; for changing timestamps directly from the agenda view.
 ;;
-;; `org-clock-convenience-timestamp-up' and `org-clock-convenience-timestamp-down'
-;; can be used to modify the clocked times in and agenda log line
-;; in steps (same as on timestamps in a normal org file).
-;; `org-clock-convenience-fill-gap' modifies the timestamp at point
-;; to connect to the previous/next clocked timestamp.
-;; Also provides a number of utility functions to work with and
-;; find/analyze timestamps.
+;; `org-clock-convenience-timestamp-up' and
+;; `org-clock-convenience-timestamp-down' can be used to modify the
+;; clocked times in and agenda log line in steps (same as on
+;; timestamps in a normal org file). `org-clock-convenience-fill-gap'
+;; modifies the timestamp at point to connect to the previous/next
+;; clocked timestamp. `org-clock-convenience-fill-gap-both' will fill
+;; the gap of both the starting time as well as of the ending time of
+;; the time range in the current agenda log line. Also provides a
+;; number of utility functions to work with and find/analyze
+;; timestamps.
 
 ;;; Code:
 (require 'org)
@@ -306,6 +309,30 @@ the current agenda buffer."
        (search-forward-regexp org-ts-regexp-inactive)
        (replace-match (concat updated-ts))
        (org-clock-update-time-maybe)))))
+
+(defun org-clock-convenience-fill-gap-both ()
+  "Modify both timestamps at cursor to fill gap to last/next timerange.
+Performs `org-clock-convenience-fill-gap' sequentially on the
+starting time and the ending of the time range. Can be executed
+from anywhere within a valid clocked time range line."
+  ;; the undo behavior is a bit unsatisfying, since undoing the whole
+  ;; operation requires two invocations of undo.
+  (interactive)
+  (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
+  (save-excursion
+    (beginning-of-line)
+    (cl-assert (looking-at org-clock-convenience-clocked-agenda-re) nil
+	       "Error: Not on a clocked time range line")
+    (org-clock-convenience-goto-re-field 'd1-time
+					 org-clock-convenience-clocked-agenda-re
+					 org-clock-convenience-clocked-agenda-fields)
+    (org-clock-convenience-fill-gap)
+    (beginning-of-line)
+    (org-clock-convenience-goto-re-field 'd2-time
+					 org-clock-convenience-clocked-agenda-re
+					 org-clock-convenience-clocked-agenda-fields)
+    (org-clock-convenience-fill-gap))
+  )
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
