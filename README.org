@@ -50,6 +50,11 @@
     agenda and on the source buffer.
   - =org-clock-convenience-fill-gap= modifies the timestamp at point to
     connect to the previous/next logged time range.
+  - =org-clock-convenience-fill-gap-both= connects both timestamps of
+    the current clock log line at point to fill the interval between
+    the previous and the next clock range. The cursor need not be on a
+    timestamp of the line. This is the most efficient way to fill the
+    interval for a forgotten task.
   - =org-clock-convenience-goto-ts= goto the associated timestamp in the org
     file. Position the cursor respective to where the cursor was
     placed in the agenda view (e.g. on the minutes part of the

@@ -1,3 +1,5 @@
+
+
 # org-clock-convenience
 
 [![img](http://melpa.org/packages/org-clock-convenience-badge.svg)](http://melpa.org/#/org-clock-convenience)
@@ -14,18 +16,19 @@ without ever having to leave it, except to open a new task.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgheadline1">1. org-clock-convenience</a></li>
-<li><a href="#orgheadline2">2. Motivation</a></li>
-<li><a href="#orgheadline3">3. Interactive functions</a></li>
-<li><a href="#orgheadline4">4. Installation</a>
+<li><a href="#orgbab5bb2">1. org-clock-convenience</a></li>
+<li><a href="#orga86fa4b">2. Motivation</a></li>
+<li><a href="#org82e940f">3. Interactive functions</a></li>
+<li><a href="#orga542b3f">4. Installation</a>
 <ul>
-<li><a href="#orgheadline5">4.1. Tip: using helm for efficient clocking into tasks</a></li>
+<li><a href="#org70497b5">4.1. Tip: using helm for efficiently clocking into tasks</a></li>
 </ul>
 </li>
-<li><a href="#orgheadline6">5. Current shortcomings</a></li>
+<li><a href="#org4801fd4">5. Current shortcomings</a></li>
 </ul>
 </div>
 </div>
+
 
 # Motivation
 
@@ -44,6 +47,7 @@ way that one can change timestamps under the cursor inside of an org
 file using `org-timestamp-up` and `org-timestamp-down` (usually
 mapped to `<S-up>` and `<S-down>`).
 
+
 # Interactive functions
 
 -   `org-clock-convenience-timestamp-up` and `org-clock-convenience-timestamp-down`:
@@ -54,6 +58,11 @@ mapped to `<S-up>` and `<S-down>`).
     agenda and on the source buffer.
 -   `org-clock-convenience-fill-gap` modifies the timestamp at point to
     connect to the previous/next logged time range.
+-   `org-clock-convenience-fill-gap-both` connects both timestamps of
+    the current clock log line at point to fill the interval between
+    the previous and the next clock range. The cursor need not be on a
+    timestamp of the line. This is the most efficient way to fill the
+    interval for a forgotten task.
 -   `org-clock-convenience-goto-ts` goto the associated timestamp in the org
     file. Position the cursor respective to where the cursor was
     placed in the agenda view (e.g. on the minutes part of the
@@ -72,10 +81,11 @@ The package also contains a number of utility functions to associate
 a list with field names with the subgroup of a regular expression and
 position point at a named field or read its value.
 
+
 # Installation
 
 -   The package is available from [MELPA](http://melpa.org).
--   You can always install the raw package an then do
+-   You can always install the raw package and then do
     
         (require 'org-clock-convenience)
 
@@ -92,7 +102,8 @@ adding it to the functions run by `org-agenda-mode-hook` like here:
         (kbd "ö") #'org-clock-convenience-fill-gap))
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
 
-## Tip: using helm for efficient clocking into tasks
+
+## Tip: using helm for efficiently clocking into tasks
 
 In order not having to leave the agenda view for clocking into a
 task that is not displayed in some way in the agenda view (where
@@ -110,6 +121,7 @@ easy to just add the clocking-in as another possible action to the
               (list
                (cons "Clock into task" #'dfeich/helm-org-clock-in))))
 
+
 # Current shortcomings
 
 -   Agenda view sometimes needs two rebuilds (using `g`) after modifying. This is
@@ -120,3 +132,4 @@ easy to just add the clocking-in as another possible action to the
     temporary font, and the time span is clearly not marked, this should not
     confuse the user. I consider this secondary for the moment and will maybe
     add it at some point.
+
