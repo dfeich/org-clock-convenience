@@ -16,15 +16,17 @@ without ever having to leave it, except to open a new task.
 <h2>Table of Contents</h2>
 <div id="text-table-of-contents">
 <ul>
-<li><a href="#orgbab5bb2">1. org-clock-convenience</a></li>
-<li><a href="#orga86fa4b">2. Motivation</a></li>
-<li><a href="#org82e940f">3. Interactive functions</a></li>
-<li><a href="#orga542b3f">4. Installation</a>
+<li><a href="#orgd961196">1. org-clock-convenience</a></li>
+<li><a href="#org551d8f5">2. Motivation</a></li>
+<li><a href="#orgc00d1ba">3. Interactive functions</a></li>
+<li><a href="#org02543bd">4. Installation</a>
 <ul>
-<li><a href="#org70497b5">4.1. Tip: using helm for efficiently clocking into tasks</a></li>
+<li><a href="#org783318e">4.1. basic installation and configuration</a></li>
+<li><a href="#orge1cbddb">4.2. installation and configuration by <b>use-package</b></a></li>
+<li><a href="#orgaec1e99">4.3. Tip: using helm for efficiently clocking into tasks</a></li>
 </ul>
 </li>
-<li><a href="#org4801fd4">5. Current shortcomings</a></li>
+<li><a href="#org9ad4bb7">5. Current shortcomings</a></li>
 </ul>
 </div>
 </div>
@@ -84,6 +86,9 @@ position point at a named field or read its value.
 
 # Installation
 
+
+## basic installation and configuration
+
 -   The package is available from [MELPA](http://melpa.org).
 -   You can always install the raw package and then do
     
@@ -99,8 +104,25 @@ adding it to the functions run by `org-agenda-mode-hook` like here:
       (define-key org-agenda-mode-map
         (kbd "<S-down>") #'org-clock-convenience-timestamp-down)
       (define-key org-agenda-mode-map
-        (kbd "ö") #'org-clock-convenience-fill-gap))
+        (kbd "ö") #'org-clock-convenience-fill-gap)
+      (define-key org-agenda-mode-map
+        (kbd "é") #'org-clock-convenience-fill-gap-both))
     (add-hook 'org-agenda-mode-hook #'dfeich/org-agenda-mode-fn)
+
+
+## installation and configuration by **use-package**
+
+If you are using John Wiegley's nice [use-package](https://github.com/jwiegley/use-package) to manage your configuration, the
+configuration becomes much easier.
+may want to use something like the following
+
+    (use-package org-clock-convenience
+      :ensure t
+      :bind (:map org-agenda-mode-map
+       	   ("<S-up>" . org-clock-convenience-timestamp-up)
+       	   ("<S-down>" . org-clock-convenience-timestamp-down)
+       	   ("ö" . org-clock-convenience-fill-gap)
+       	   ("é" . org-clock-convenience-fill-gap-both)))
 
 
 ## Tip: using helm for efficiently clocking into tasks
@@ -120,6 +142,42 @@ easy to just add the clocking-in as another possible action to the
       '(nconc helm-org-headings-actions
               (list
                (cons "Clock into task" #'dfeich/helm-org-clock-in))))
+
+Again, if you are using [use-package](https://github.com/jwiegley/use-package), you may want to include this in
+the configuration (:config) stanza of `helm-config`. E.g. in my own config:
+
+    (use-package helm-config
+      :demand t
+      :bind (( "<f5> <f5>" . helm-org-agenda-files-headings)
+          ( "<f5> a" . helm-apropos)
+          ( "<f5> A" . helm-apt)
+          ( "<f5> b" . helm-buffers-list)
+          ( "<f5> c" . helm-colors)
+          ( "<f5> f" . helm-find-files)
+          ( "<f5> i" . helm-semantic-or-imenu)
+          ( "<f5> k" . helm-show-kill-ring)
+          ( "<f5> K" . helm-execute-kmacro)
+          ( "<f5> l" . helm-locate)
+          ( "<f5> m" . helm-man-woman)
+          ( "<f5> o" . helm-occur)
+          ( "<f5> r" . helm-resume)
+          ( "<f5> R" . helm-register)
+          ( "<f5> t" . helm-top)
+          ( "<f5> u" . helm-ucs)
+          ( "<f5> p" . helm-list-emacs-process)
+          ( "<f5> x" . helm-M-x))
+      :config (progn
+       	 ;; extend helm for org headings with the clock in action
+       	 (defun dfeich/helm-org-clock-in (marker)
+       	   "Clock into the item at MARKER"
+       	   (with-current-buffer (marker-buffer marker)
+       	     (goto-char (marker-position marker))
+       	     (org-clock-in)))
+       	 (eval-after-load 'helm-org
+       	   '(nconc helm-org-headings-actions
+       		   (list
+       		    (cons "Clock into task" #'dfeich/helm-org-clock-in)))))
+      )
 
 
 # Current shortcomings
