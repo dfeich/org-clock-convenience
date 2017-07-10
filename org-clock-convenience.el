@@ -134,6 +134,18 @@ in `org-clock-convenience-tr-fields'."
 				       org-clock-convenience-clocked-agenda-fields
 				       "Error: not on a clocked time log line"))
 
+(defun org-clock-convenience-forward-log-line ()
+  (interactive)
+  (if (re-search-forward org-clock-convenience-clocked-agenda-re nil t)
+      (org-clock-convenience-goto-agenda-tr-field 'd1-minutes)
+    (error "Error: No next log line")))
+
+(defun org-clock-convenience-backward-log-line ()
+  (interactive)
+  (if (re-search-backward org-clock-convenience-clocked-agenda-re nil t)
+      (org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
+    (error "Error: No previous log line")))
+
 (defun org-clock-convenience-get-agenda-tr-fieldname (point)
   "Return field name of time range where POINT is located.
 The field names are based of the sub-patterns defined by
