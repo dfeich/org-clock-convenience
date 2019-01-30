@@ -48,7 +48,7 @@
 
 
 (defvar org-clock-convenience-clocked-agenda-re
-  "^ +\\([^:]+\\): +\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
+  "^ +\\([^:]+\\): *\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-convenience-clocked-agenda-fields
@@ -134,13 +134,17 @@ in `org-clock-convenience-tr-fields'."
 				       org-clock-convenience-clocked-agenda-fields
 				       "Error: not on a clocked time log line"))
 
+;;;###autoload
 (defun org-clock-convenience-forward-log-line ()
+  "Move cursor to the next agenda log line."
   (interactive)
   (if (re-search-forward org-clock-convenience-clocked-agenda-re nil t)
       (org-clock-convenience-goto-agenda-tr-field 'd1-minutes)
     (error "Error: No next log line")))
 
+;;;###autoload
 (defun org-clock-convenience-backward-log-line ()
+  "Move cursor to the previous agenda log line."
   (interactive)
   (if (re-search-backward org-clock-convenience-clocked-agenda-re nil t)
       (org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
@@ -164,6 +168,7 @@ in a log line of the agenda buffer."
     ((or `d1-hours `d2-hours `d1-minutes `d2-minutes) t)
     (default nil)))
 
+;;;###autoload
 (defun org-clock-convenience-goto-ts ()
   "From agenda log line goto to corresponding timestamp position in org file.
 
@@ -219,6 +224,7 @@ associated org agenda file."
     )
   )
 
+;;;###autoload
 (defun org-clock-convenience-timestamp-up (&optional arg)
   "Increase the date item at the cursor by one.
 Used in a clocked line from the agenda view.  If the cursor is on
@@ -227,6 +233,7 @@ change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
   (org-clock-convenience-timestamp-change (prefix-numeric-value arg)))
 
+;;;###autoload
 (defun org-clock-convenience-timestamp-down (&optional arg)
   "Increase the date item at the cursor by one.
 Used in a clocked line from the agenda view.  If the cursor is on
@@ -235,6 +242,7 @@ change the minutes.  With prefix ARG, change by that many units."
   (interactive "p")
   (org-clock-convenience-timestamp-change (- (prefix-numeric-value arg))))
 
+;;;###autoload
 (defun org-clock-convenience-fill-gap ()
   "Modify timestamp at cursor to connect to previous/next timerange.
 Used from the agenda buffer by placing point on a log line of a
@@ -322,6 +330,7 @@ the current agenda buffer."
        (replace-match (concat updated-ts))
        (org-clock-update-time-maybe)))))
 
+;;;###autoload
 (defun org-clock-convenience-fill-gap-both ()
   "Modify both timestamps at cursor to fill gap to last/next timerange.
 Performs `org-clock-convenience-fill-gap' sequentially on the
@@ -395,6 +404,7 @@ Return position, time string, and headline in a list"
 	(org-flag-drawer nil)
 	(goto-char pos)))))
 
+;;;###autoload
 (defun org-clock-convenience-goto-last-clockout (&optional buffer)
   "Jump to the position of the last clockout in BUFFER."
   (interactive)
