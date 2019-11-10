@@ -1,7 +1,7 @@
-;;; org-clock-convenience.el --- convenience functions for org time tracking
+;;; org-clock-convenience.el --- Convenience functions for org time tracking
 
 ;; Author: Derek Feichtinger <dfeich.gmail.com>
-;; Keywords: org
+;; Keywords: convenience org
 ;; Package-Requires: ((cl-lib "0.5") (org "8") (emacs "24.3"))
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
 ;; Version: 1.2
@@ -29,9 +29,9 @@
 ;; clocked times in and agenda log line in steps (same as on
 ;; timestamps in a normal org file). `org-clock-convenience-fill-gap'
 ;; modifies the timestamp at point to connect to the previous/next
-;; clocked timestamp. `org-clock-convenience-fill-gap-both' will fill
+;; clocked timestamp.  `org-clock-convenience-fill-gap-both' will fill
 ;; the gap of both the starting time as well as of the ending time of
-;; the time range in the current agenda log line. Also provides a
+;; the time range in the current agenda log line.  Also provides a
 ;; number of utility functions to work with and find/analyze
 ;; timestamps.
 
@@ -163,7 +163,7 @@ in a log line of the agenda buffer."
 				       "Error: not on a clocked time log line"))
 
 (defun org-clock-convenience-at-timefield-p ()
-  "Return true if point is on a clocked time field in the log agenda view."
+  "Return t if point is on a clocked time field in the log agenda view."
   (pcase (org-clock-convenience-get-agenda-tr-fieldname (point))
     ((or `d1-hours `d2-hours `d1-minutes `d2-minutes) t)
     (default nil)))
@@ -334,7 +334,7 @@ the current agenda buffer."
 (defun org-clock-convenience-fill-gap-both ()
   "Modify both timestamps at cursor to fill gap to last/next timerange.
 Performs `org-clock-convenience-fill-gap' sequentially on the
-starting time and the ending of the time range. Can be executed
+starting time and the ending of the time range.  Can be executed
 from anywhere within a valid clocked time range line."
   ;; the undo behavior is a bit unsatisfying, since undoing the whole
   ;; operation requires two invocations of undo.
