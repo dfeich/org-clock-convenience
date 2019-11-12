@@ -39,6 +39,7 @@
 (require 'org)
 (require 'org-element)
 (require 'cl-lib)
+(require 's)
 
 ;; save-mark-and-excursion in Emacs 25 works like save-excursion did before
 (eval-when-compile
@@ -403,6 +404,45 @@ Return position, time string, and headline in a list"
 	(goto-char (org-element-property :begin element))
 	(org-flag-drawer nil)
 	(goto-char pos)))))
+
+(defun org-clock-convenience-sort-clocklines (&optional marker)
+  "Sort the clock lines block at the current MARKER.
+
+The most recent clock line will be on top.  If called
+interactively or if no MARKER is given, the current
+position (point) will be used."
+  (interactive)
+  (save-mark-and-excursion
+    (when marker
+      (org-goto-marker-or-bmk marker))
+    (forward-line 0)
+    (cl-assert (looking-at-p org-clock-convenience-tr-re) nil
+	       "Error: Not a clock line")
+    (let* ((initpoint (point))
+	   (startpoint (progn (while (org-at-clock-log-p)
+				(forward-line -1))
+			      (forward-line 1)
+			      (point)))
+	   (endpoint (progn (goto-char initpoint)
+			    (while (org-at-clock-log-p)
+			      (forward-line 1))
+			    (forward-line -1)
+			    (end-of-line)
+			    (point)))
+	   ;;(clines (s-lines (buffer-substring startpoint endpoint)))
+	   (clines (s-lines (buffer-substring-no-properties startpoint endpoint)))
+	   (matchpos (1+ (cl-position
+			  'd1-timestamp
+			  org-clock-convenience-tr-fields))))
+      ;; (message "start: %d   init: %d       end: %d" startpoint initpoint endpoint)
+      (cl-labels ((get-start (ts) (nth
+				   matchpos
+				   (s-match org-clock-convenience-tr-re ts))))
+	(setq clines (cl-sort clines #'org-time> :key #'get-start)))
+      (goto-char startpoint)
+      (delete-region startpoint endpoint)
+      (insert (mapconcat #'identity clines "\n")))))
+
 
 ;;;###autoload
 (defun org-clock-convenience-goto-last-clockout (&optional buffer)
