@@ -106,10 +106,10 @@ are subpattern which contain several other subpatterns, and one
 wants only the names of the smaller subpatterns).  ERRMSG allows
 specifying an error message if RE is not matching."
   (save-mark-and-excursion
-   (beginning-of-line)
-   (cl-assert (looking-at re) nil
-	      (or errmsg
-		  "Error: regexp for analyzing fields does not match here")))
+    (forward-line 0)
+    (cl-assert (looking-at re) nil
+	       (or errmsg
+		   "Error: regexp for analyzing fields does not match here")))
   (cl-loop
    for field in fnames
    with cnt = 0
@@ -248,9 +248,7 @@ associated org agenda file."
       (let ((inhibit-read-only t))
 	(delete-char (length updated-time))
 	(insert (propertize updated-time 'face 'secondary-selection))))
-    (goto-char pos)
-    )
-  )
+    (goto-char pos)))
 
 ;;;###autoload
 (defun org-clock-convenience-timestamp-up (&optional arg)
@@ -272,18 +270,19 @@ change the minutes.  With prefix ARG, change by that many units."
 
 ;;;###autoload
 (defun org-clock-convenience-fill-gap ()
-  "Modify timestamp at cursor to connect to previous/next timerange.
+  "Modify timestamp at cursor to fill the gap to the previous/next timerange.
 Used from the agenda buffer by placing point on a log line of a
-clocked entry.  If point is on the start time, the start time will
-be modified to connect to the end time of the previous clocked
-task.  If works accordingly if point is on the end time of the
-current log entry.  If there is no newer logged clock line, the
-end time will be set to the current time.
+clocked entry.  If point is on the start time, the start time
+will be modified to connect to the end time of the previous
+clocked task.  If works accordingly if point is on the end time
+of the current log entry.  If there is no newer logged clock
+line, the end time will be set to the current time.
 
 For performance reasons the previous/next clock item is found
 based on a search for the previous/next clocked log line in the
-agenda buffer, so it can only connect to a time range visible in
-the current agenda buffer."
+agenda buffer (and not by scanning all `org-agenda-files', so it
+can only connect to a time range visible in the current agenda
+buffer."
   (interactive)
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
   (let* ((fieldname (org-clock-convenience-get-fieldname
@@ -291,8 +290,7 @@ the current agenda buffer."
 		     org-clock-convenience-clocked-agenda-re
 		     org-clock-convenience-clocked-agenda-fields
 		     nil
-		     "Error: Not on an agenda clock log line."
-		     ))
+		     "Error: Not on an agenda clock log line."))
 	 updated-ts updated-time marker buffer tsname tmname)
     (save-mark-and-excursion
       ;; find next/previous log line and fetch the appropriate time
@@ -341,17 +339,17 @@ the current agenda buffer."
     (setq buffer (marker-buffer marker))
     (org-with-remote-undo buffer
       (save-mark-and-excursion
-       ;; replace time in log line
-       (org-clock-convenience-goto-agenda-tr-field fieldname)
-       (let ((inhibit-read-only t))
-	 (delete-char (length updated-time))
-	 (insert (propertize updated-time 'face 'secondary-selection)))
-       ;; now replace timestamp in org file
-       (org-clock-convenience-goto-ts)
-       (search-backward "[")
-       (search-forward-regexp org-ts-regexp-inactive)
-       (replace-match (concat updated-ts))
-       (org-clock-update-time-maybe)))))
+	;; replace time in log line
+	(org-clock-convenience-goto-agenda-tr-field fieldname)
+	(let ((inhibit-read-only t))
+	  (delete-char (length updated-time))
+	  (insert (propertize updated-time 'face 'secondary-selection)))
+	;; now replace timestamp in org file
+	(org-clock-convenience-goto-ts)
+	(search-backward "[")
+	(search-forward-regexp org-ts-regexp-inactive)
+	(replace-match (concat updated-ts))
+	(org-clock-update-time-maybe)))))
 
 ;;;###autoload
 (defun org-clock-convenience-fill-gap-both ()
@@ -364,7 +362,7 @@ from anywhere within a valid clocked time range line."
   (interactive)
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
   (save-excursion
-    (beginning-of-line)
+    (forward-line 0)
     (cl-assert (looking-at org-clock-convenience-clocked-agenda-re) nil
 	       "Error: Not on a clocked time range line")
     (org-clock-convenience-goto-agenda-tr-field 'd1-time)
@@ -379,34 +377,34 @@ from anywhere within a valid clocked time range line."
 Return position, time string, and headline in a list"
   (with-current-buffer buffer
     (save-mark-and-excursion
-     (save-restriction
-       (widen)
-       (let* ((cpattern (concat "^ *" org-clock-string
-				".*\\]--\\(\\[[^]]+\\]\\)"))
-	      (parsetree (org-element-parse-buffer 'headline))
-	      (clocklist
-	       (org-element-map parsetree 'headline
-		 (lambda (hl)
-		   (goto-char (org-element-property :begin hl))
-		   (let* ((end (org-element-property :end hl))
-			  (srend
-			   (save-mark-and-excursion (end-of-line)
-						    (or (re-search-forward "^\\\*" end t)
-							end))))
-		     (if (re-search-forward cpattern srend t)
-			 (list
-			  (copy-marker  (- (point)
-					   (length (match-string-no-properties 1))))
-			  (match-string-no-properties 1)
-			  (org-element-property :title hl))
-		       nil))))))
-	 (cl-loop with mx = (list 0 "<1970-01-02 Thu>")
-		  for elem in clocklist
-		  if (org-time> (nth 1 elem) (nth 1 mx))
-		  do (setq mx elem)
-		  ;;and collect mx into hitlist
-		  ;;finally return (list mx hitlist clocklist)
-		  finally return mx))))))
+      (save-restriction
+	(widen)
+	(let* ((cpattern (concat "^ *" org-clock-string
+				 ".*\\]--\\(\\[[^]]+\\]\\)"))
+	       (parsetree (org-element-parse-buffer 'headline))
+	       (clocklist
+		(org-element-map parsetree 'headline
+		  (lambda (hl)
+		    (goto-char (org-element-property :begin hl))
+		    (let* ((end (org-element-property :end hl))
+			   (srend
+			    (save-mark-and-excursion (end-of-line)
+						     (or (re-search-forward "^\\\*" end t)
+							 end))))
+		      (if (re-search-forward cpattern srend t)
+			  (list
+			   (copy-marker  (- (point)
+					    (length (match-string-no-properties 1))))
+			   (match-string-no-properties 1)
+			   (org-element-property :title hl))
+			nil))))))
+	  (cl-loop with mx = (list 0 "<1970-01-02 Thu>")
+		   for elem in clocklist
+		   if (org-time> (nth 1 elem) (nth 1 mx))
+		   do (setq mx elem)
+		   ;;and collect mx into hitlist
+		   ;;finally return (list mx hitlist clocklist)
+		   finally return mx))))))
 
 (defun org-clock-convenience-open-if-in-drawer ()
   "If pos is within drawer, open the drawer."
