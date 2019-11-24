@@ -119,37 +119,65 @@ specifying an error message if RE is not matching."
    return field
    finally return nil))
 
+(defun org-clock-convenience-get-tr-field (fieldname)
+  "Get the value of the field from the current clockrange line.
+The field is defined by FIELDNAME and corresponds to one of the names
+in `org-clock-convenience-tr-fields'."
+  (forward-line 0)
+  (org-clock-convenience-get-re-field fieldname
+				      org-clock-convenience-tr-re
+				      org-clock-convenience-tr-fields
+				      "Error: not on a clocked time log line"))
+
 (defun org-clock-convenience-goto-tr-field (fieldname)
   "Position point inside a field of the clocked time range in the current line.
 The field is defined by FIELDNAME and corresponds to one of the names
 in `org-clock-convenience-tr-fields'."
-  (beginning-of-line)
-  (org-clock-convenience-goto-re-field fieldname org-clock-convenience-tr-re org-clock-convenience-tr-fields
+  (forward-line 0)
+  (org-clock-convenience-goto-re-field fieldname
+				       org-clock-convenience-tr-re
+				       org-clock-convenience-tr-fields
 				       "Error: not on a clocked time log line"))
 
 (defun org-clock-convenience-goto-agenda-tr-field (fieldname)
-  "Move cursor to the FIELDNAME of a agenda view clocked log line."
+  "Move cursor to the specified FIELDNAME in the agenda clock line.
+Refer to `org-clock-convenience-clocked-agenda-fields' for the
+available fieldnames."
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
-  (beginning-of-line)
-  (org-clock-convenience-goto-re-field fieldname org-clock-convenience-clocked-agenda-re
+  (forward-line 0)
+  (org-clock-convenience-goto-re-field fieldname
+				       org-clock-convenience-clocked-agenda-re
 				       org-clock-convenience-clocked-agenda-fields
 				       "Error: not on a clocked time log line"))
 
 ;;;###autoload
 (defun org-clock-convenience-forward-log-line ()
-  "Move cursor to the next agenda log line."
+  "Move cursor to the next agenda log line.
+Point will be placed at the minutes location of the first timestamp.  If called
+non-interactively the function will return nil if no next log line was found."
   (interactive)
   (if (re-search-forward org-clock-convenience-clocked-agenda-re nil t)
-      (org-clock-convenience-goto-agenda-tr-field 'd1-minutes)
-    (error "Error: No next log line")))
+      (progn
+	(org-clock-convenience-goto-agenda-tr-field 'd1-minutes)
+	t)
+    (when (called-interactively-p 'any)
+      (error "Error: No next log line"))
+    nil))
 
 ;;;###autoload
 (defun org-clock-convenience-backward-log-line ()
-  "Move cursor to the previous agenda log line."
+  "Move cursor to the previous agenda log line.
+Point will be placed at the minutes location of the second
+timestamp.  If called non-interactively the function will return
+nil if no previous log line was found."
   (interactive)
   (if (re-search-backward org-clock-convenience-clocked-agenda-re nil t)
-      (org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
-    (error "Error: No previous log line")))
+      (progn
+	(org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
+	t)
+    (when (called-interactively-p 'any)
+      (error "Error: No previous log line"))
+    nil))
 
 (defun org-clock-convenience-get-agenda-tr-fieldname (point)
   "Return field name of time range where POINT is located.
@@ -203,20 +231,19 @@ associated org agenda file."
 	 timefield updated-time)
     (org-with-remote-undo buffer
       (save-mark-and-excursion
-       (org-clock-convenience-goto-ts)
-       (org-timestamp-change n nil 'updown)
-       (beginning-of-line)
-       (looking-at org-clock-convenience-tr-re)
-       (setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
-			 ("d1-" 'd1-time)
-			 ("d2-" 'd2-time)))
-       ;; a bit ugly. regrettably need to replace the leading space, because
-       ;; the org-ts-regexp0 defines the leading space to be part of the pattern
-       (setq updated-time
-	     (replace-regexp-in-string " *" ""
-				       (org-clock-convenience-get-re-field timefield
-									   org-clock-convenience-tr-re
-									   org-clock-convenience-tr-fields))))
+	(org-clock-convenience-goto-ts)
+	(org-timestamp-change n nil 'updown)
+	(beginning-of-line)
+	(looking-at org-clock-convenience-tr-re)
+	(setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
+			  ("d1-" 'd1-time)
+			  ("d2-" 'd2-time)))
+	;; a bit ugly. regrettably need to replace the leading space, because
+	;; the org-ts-regexp0 defines the leading space to be part of the pattern
+	(setq updated-time
+	      (replace-regexp-in-string
+	       " *" ""
+	       (org-clock-convenience-get-tr-field timefield))))
       (org-clock-convenience-goto-agenda-tr-field timefield)
       (let ((inhibit-read-only t))
 	(delete-char (length updated-time))
@@ -268,50 +295,45 @@ the current agenda buffer."
 		     ))
 	 updated-ts updated-time marker buffer tsname tmname)
     (save-mark-and-excursion
-     ;; find next/previous log line and fetch the appropriate time
-     ;; stamp from the respective org file
-     (pcase (cl-subseq (symbol-name fieldname) 0 3)
-       ("d1-" (progn
-		(setq tsname 'd2-timestamp tmname 'd2-time)
-		(beginning-of-line)
-		(unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
-						(point-min) t)
-		  (error "Error: Cannot find previous log line in buffer"))))
-       ("d2-" (progn
-		(setq tsname 'd1-timestamp tmname 'd1-time)
-		(forward-line 1)
-		(unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
-					       (point-max) t)
-		  (setq tsname 'now tmname 'now))))
-       (default (error "Error: Not on a clock field in an agenda log line")))
+      ;; find next/previous log line and fetch the appropriate time
+      ;; stamp from the respective org file
+      (pcase (cl-subseq (symbol-name fieldname) 0 3)
+	("d1-" (progn
+		 (setq tsname 'd2-timestamp tmname 'd2-time)
+		 (forward-line 0)
+		 (unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
+						 (point-min) t)
+		   (error "Error: Cannot find previous log line in buffer"))))
+	("d2-" (progn
+		 (setq tsname 'd1-timestamp tmname 'd1-time)
+		 (forward-line 1)
+		 (unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
+						(point-max) t)
+		   (setq tsname 'now tmname 'now))))
+	(default (error "Error: Not on a clock field in an agenda log line")))
 
-     (if (equal tsname 'now)
-	 (let ((time (current-time)))
-	   (setq updated-ts (format-time-string
-			     (concat "["
-				     (substring (cdr org-time-stamp-formats)
-						1 -1)
-				     "]")
-			     time)
-		 updated-time (format-time-string "%H:%M" time)))
-       (beginning-of-line)
-       (setq marker (or (org-get-at-bol 'org-marker)
-			(org-agenda-error)))
-       (setq buffer (marker-buffer marker))
-       (set-buffer buffer)
-       (goto-char (marker-position marker))
-       (org-clock-convenience-open-if-in-drawer)
-       (setq updated-ts (concat "["
-				(org-clock-convenience-get-re-field
-				 tsname
-				 org-clock-convenience-tr-re
-				 org-clock-convenience-tr-fields)
-				"]")
-	     updated-time (replace-regexp-in-string
-			   " *" "" (org-clock-convenience-get-re-field
-				    tmname
-				    org-clock-convenience-tr-re
-				    org-clock-convenience-tr-fields)))))
+      (if (equal tsname 'now)
+	  (let ((time (current-time)))
+	    (setq updated-ts (format-time-string
+			      (concat "["
+				      (substring (cdr org-time-stamp-formats)
+						 1 -1)
+				      "]")
+			      time)
+		  updated-time (format-time-string "%H:%M" time)))
+	(forward-line 0)
+	(setq marker (or (org-get-at-bol 'org-marker)
+			 (org-agenda-error)))
+	(setq buffer (marker-buffer marker))
+	(set-buffer buffer)
+	(goto-char (marker-position marker))
+	(org-clock-convenience-open-if-in-drawer)
+	(setq updated-ts (concat "["
+				 (org-clock-convenience-get-tr-field tsname)
+				 "]")
+	      updated-time (replace-regexp-in-string
+			    " *" ""
+			    (org-clock-convenience-get-tr-field tmname)))))
     ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
     ;; 	     fieldname tsname updated-ts updated-time)
     (setq marker (or (org-get-at-bol 'org-marker)
@@ -345,16 +367,10 @@ from anywhere within a valid clocked time range line."
     (beginning-of-line)
     (cl-assert (looking-at org-clock-convenience-clocked-agenda-re) nil
 	       "Error: Not on a clocked time range line")
-    (org-clock-convenience-goto-re-field 'd1-time
-					 org-clock-convenience-clocked-agenda-re
-					 org-clock-convenience-clocked-agenda-fields)
+    (org-clock-convenience-goto-agenda-tr-field 'd1-time)
     (org-clock-convenience-fill-gap)
-    (beginning-of-line)
-    (org-clock-convenience-goto-re-field 'd2-time
-					 org-clock-convenience-clocked-agenda-re
-					 org-clock-convenience-clocked-agenda-fields)
-    (org-clock-convenience-fill-gap))
-  )
+    (org-clock-convenience-goto-agenda-tr-field 'd2-time)
+    (org-clock-convenience-fill-gap)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
