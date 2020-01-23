@@ -12,24 +12,17 @@ without ever having to leave it, except to open a new task.
 
 ![img](./org-clock-conv.gif)
 
-<div id="table-of-contents">
-<h2>Table of Contents</h2>
-<div id="text-table-of-contents">
-<ul>
-<li><a href="#orgd961196">1. org-clock-convenience</a></li>
-<li><a href="#org551d8f5">2. Motivation</a></li>
-<li><a href="#orgc00d1ba">3. Interactive functions</a></li>
-<li><a href="#org02543bd">4. Installation</a>
-<ul>
-<li><a href="#org783318e">4.1. basic installation and configuration</a></li>
-<li><a href="#orge1cbddb">4.2. installation and configuration by <b>use-package</b></a></li>
-<li><a href="#orgaec1e99">4.3. Tip: using helm for efficiently clocking into tasks</a></li>
-</ul>
-</li>
-<li><a href="#org9ad4bb7">5. Current shortcomings</a></li>
-</ul>
-</div>
-</div>
+
+# Table of Contents
+
+1.  [org-clock-convenience](#org382ac09)
+2.  [Motivation](#orga849512)
+3.  [Interactive functions](#org424eed3)
+4.  [Installation](#org54b1a67)
+    1.  [basic installation and configuration](#orgd98bd2d)
+    2.  [installation and configuration by **use-package**](#orgf88367d)
+    3.  [Tip: using helm for efficiently clocking into tasks](#orge8274dd)
+5.  [Current shortcomings](#org424daf7)
 
 
 # Motivation
@@ -182,8 +175,6 @@ the configuration (:config) stanza of `helm-config`. E.g. in my own config:
 
 # Current shortcomings
 
--   Agenda view sometimes needs two rebuilds (using `g`) after modifying. This is
-    a minor inconvenience, and I need to investigate.
 -   the calculated time span in the agenda buffer (the duration given
     in parentheses in each clock line) is only corrected after the
     user rebuilds the buffer. Since the changed fields are clearly marked by the

@@ -3,13 +3,13 @@
 #+OPTIONS: email:nil f:t inline:t num:t p:nil pri:nil prop:nil stat:t
 #+OPTIONS: tags:t tasks:t tex:t timestamp:t title:t toc:nil todo:t |:t
 #+TITLE: Org-clock-convenience
-#+DATE: <2016-02-14 Sun>
+# #+DATE: <2016-02-14 Sun>
 #+AUTHOR: Derek Feichtinger
 #+EMAIL: dfeich@gmail.com
 #+LANGUAGE: en
 #+SELECT_TAGS: export
 #+EXCLUDE_TAGS: noexport
-#+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
+# #+CREATOR: Emacs 24.5.1 (Org mode 8.3.2)
 
 * org-clock-convenience
 
@@ -171,8 +171,6 @@
    #+END_SRC
 
 * Current shortcomings
-  - Agenda view sometimes needs two rebuilds (using =g=) after modifying. This is
-    a minor inconvenience, and I need to investigate.
   - the calculated time span in the agenda buffer (the duration given
     in parentheses in each clock line) is only corrected after the
     user rebuilds the buffer. Since the changed fields are clearly marked by the
