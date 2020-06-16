@@ -48,7 +48,7 @@
 
 
 (defvar org-clock-convenience-clocked-agenda-re
-  "^ +\\([^:]+\\): *\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|\.*\\)? +Clocked: +\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
+  "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-convenience-clocked-agenda-fields
@@ -97,18 +97,21 @@ for the case of the regexp not matching can be passed in ERRMSG."
 
 (defun org-clock-convenience-get-fieldname (point re fnames &optional ignore-lst errmsg)
   "Return field name of submatch where POINT is located.
-The field names are based of the sub-patterns defined by the
-regexp RE and the passed field names list FNAMES.  RE must match
-from the beginning of line.  The optional parameter IGNORE-LST can
-contain a list of submatch field names to ignore (sometimes there
-are subpattern which contain several other subpatterns, and one
-wants only the names of the smaller subpatterns).  ERRMSG allows
-specifying an error message if RE is not matching."
+The field names are based on the sub-patterns defined by the
+regexp RE and the passed field names list FNAMES. So, the field
+name of the first submatch corresponds to the first name in the
+field names list, etc.  RE must match from the beginning of
+line.  The optional parameter IGNORE-LST can contain a list of
+submatch field names to ignore (sometimes there's a subpattern
+containing several other subpatterns, and one wants only the
+names of the smaller subpatterns).  ERRMSG allows specifying an
+error message if RE is not matching."
   (save-mark-and-excursion
-   (beginning-of-line)
-   (cl-assert (looking-at re) nil
-	      (or errmsg
-		  "Error: regexp for analyzing fields does not match here")))
+    (goto-char point)
+    (beginning-of-line)
+    (cl-assert (looking-at re) nil
+	       (or errmsg
+		   "Error: regexp for analyzing fields does not match here")))
   (cl-loop
    for field in fnames
    with cnt = 0
