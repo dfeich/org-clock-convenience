@@ -411,7 +411,7 @@ Return position, time string, and headline in a list"
     (when element
       (let ((pos (point)))
 	(goto-char (org-element-property :begin element))
-	(org-flag-drawer nil)
+	(org-hide-drawer-toggle 'off)
 	(goto-char pos)))))
 
 ;;;###autoload
