@@ -40,13 +40,6 @@
 (require 'org-element)
 (require 'cl-lib)
 
-;; save-mark-and-excursion in Emacs 25 works like save-excursion did before
-(eval-when-compile
-  (when (< emacs-major-version 25)
-    (defmacro save-mark-and-excursion (&rest body)
-      `(save-excursion ,@body))))
-
-
 (defvar org-clock-convenience-clocked-agenda-re
   "\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
