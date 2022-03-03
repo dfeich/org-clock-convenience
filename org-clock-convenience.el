@@ -342,19 +342,16 @@ from anywhere within a valid clocked time range line."
   (interactive)
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
   (save-excursion
-    (beginning-of-line)
-    (cl-assert (looking-at org-clock-convenience-clocked-agenda-re) nil
-	       "Error: Not on a clocked time range line")
+    (cl-assert (org-in-regexp org-clock-convenience-clocked-agenda-re) nil
+               "Error: Not on a clocked time range line")
     (org-clock-convenience-goto-re-field 'd1-time
-					 org-clock-convenience-clocked-agenda-re
-					 org-clock-convenience-clocked-agenda-fields)
+                                         org-clock-convenience-clocked-agenda-re
+                                         org-clock-convenience-clocked-agenda-fields)
     (org-clock-convenience-fill-gap)
-    (beginning-of-line)
     (org-clock-convenience-goto-re-field 'd2-time
-					 org-clock-convenience-clocked-agenda-re
-					 org-clock-convenience-clocked-agenda-fields)
-    (org-clock-convenience-fill-gap))
-  )
+                                         org-clock-convenience-clocked-agenda-re
+                                         org-clock-convenience-clocked-agenda-fields)
+    (org-clock-convenience-fill-gap)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
