@@ -48,11 +48,11 @@
 
 
 (defvar org-clock-convenience-clocked-agenda-re
-  "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
+  "\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-convenience-clocked-agenda-fields
-  '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes duration)
+  '(d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes)
   "Field names corresponding to submatches of `org-clock-convenience-clocked-agenda-re'.")
 
 (defvar org-clock-convenience-tr-re
