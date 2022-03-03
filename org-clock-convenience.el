@@ -79,7 +79,7 @@ The fieldnames are given as a list of symbols in FNAMES.  An error message
 for the case of the regexp not matching can be passed in ERRMSG."
   (let ((idx (or (cl-position fieldname fnames)
 		 (error "No such field name: %s" fieldname))))
-    (unless (looking-at re)
+    (unless (org-in-regexp re)
       (error (or errmsg
 		 "Error: regexp for analyzing fields does not match here")))
     (goto-char (match-beginning (1+ idx)))))
@@ -108,8 +108,7 @@ names of the smaller subpatterns).  ERRMSG allows specifying an
 error message if RE is not matching."
   (save-mark-and-excursion
     (goto-char point)
-    (beginning-of-line)
-    (cl-assert (looking-at re) nil
+    (cl-assert (org-in-regexp re) nil
 	       (or errmsg
 		   "Error: regexp for analyzing fields does not match here")))
   (cl-loop
@@ -132,7 +131,6 @@ in `org-clock-convenience-tr-fields'."
 (defun org-clock-convenience-goto-agenda-tr-field (fieldname)
   "Move cursor to the FIELDNAME of a agenda view clocked log line."
   (cl-assert (eq major-mode 'org-agenda-mode) nil "Error: Not in agenda mode")
-  (beginning-of-line)
   (org-clock-convenience-goto-re-field fieldname org-clock-convenience-clocked-agenda-re
 				       org-clock-convenience-clocked-agenda-fields
 				       "Error: not on a clocked time log line"))
