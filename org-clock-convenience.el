@@ -48,7 +48,7 @@
 
 
 (defvar org-clock-convenience-clocked-agenda-re
-  "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012][0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
+  "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\([ 012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-convenience-clocked-agenda-fields
@@ -202,7 +202,8 @@ associated org agenda file."
 		     (org-agenda-error)))
 	 (buffer (marker-buffer marker))
 	 (fieldname (org-clock-convenience-get-agenda-tr-fieldname (point)))
-	 timefield updated-time)
+         (d2-str (match-string-no-properties 5))
+         timefield updated-time)
     (org-with-remote-undo buffer
       (save-mark-and-excursion
        (org-clock-convenience-goto-ts)
@@ -218,7 +219,11 @@ associated org agenda file."
 	     (replace-regexp-in-string " *" ""
 				       (org-clock-convenience-get-re-field timefield
 									   org-clock-convenience-tr-re
-									   org-clock-convenience-tr-fields))))
+									   org-clock-convenience-tr-fields)))
+       ;; Agenda might not show initial 0 (e.g. 9:45 instead of 09:45)
+       ;; but LOGBOOK always does, ensure point doesn't get off-by-one:
+       (when (eq timefield 'd2-time)
+         (cl-incf pos (- (length updated-time) (length d2-str)))))
       (org-clock-convenience-goto-agenda-tr-field timefield)
       (let* ((inhibit-read-only t)
              (props (text-properties-at (point))))
