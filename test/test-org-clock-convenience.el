@@ -27,6 +27,27 @@
                     org-clock-convenience-tr-re
                     org-clock-convenience-tr-fields))
 
+(defun occ-create-agenda(filename)
+  "Create a test agenda file"
+  (with-temp-buffer
+    (insert "* TaskA
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 08:00]--[2022-04-15 Fri 09:00] =>  1:00
+  :END:
+
+* TaskB
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05
+  :END:
+
+* TaskC
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 11:00]--[2022-04-15 Fri 12:00] =>  1:00
+  :END:
+
+")
+    (write-file filename)))
+
 ;; Tests
 
 ;; older agenda default format lines contained space-padded hours (a space
@@ -58,6 +79,28 @@
     (should (equal res
                    (occ-check-clockline-regexp line res)))))
 
-
-
+(defun test-agenda ()
+  (let* ((testfname "/tmp/testagenda.org"))
+    (setq org-agenda-files `(,testfname)
+          org-agenda-start-with-log-mode t)
+    (occ-create-agenda testfname)
+    (org-agenda-list 1 "2022-04-15")
+    ;;(org-agenda-goto-date "2022-04-15")
+    (with-current-buffer org-agenda-buffer
+      (princ (buffer-string))
+      
+      (goto-char (point-min))
+      (org-clock-convenience-forward-log-line)
+      (org-clock-convenience-forward-log-line)
+      (forward-line 0)
+      (princ (format "PARSED: %s" 
+                     (org-clock-convenience-get-re-field
+                      'd1-time
+                      org-clock-convenience-clocked-agenda-re
+                      org-clock-convenience-clocked-agenda-fields))))
+    
+    
+    )
+  
+  )
 
