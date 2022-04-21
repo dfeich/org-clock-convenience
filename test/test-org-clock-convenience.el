@@ -97,6 +97,43 @@
                (d2-hours "18") (d2-minutes "10"))))
     (occ-test-clockline-regexp line res)))
 
+
+(defmacro occ-with-tempagenda (orgentries datestr body)
+  "docstring"
+  `(let* ((testfname (make-temp-file "occ-test-agenda-" nil ".org")))
+     (with-temp-file testfname
+       (insert ,orgentries))
+     (setq org-agenda-files (list testfname)
+           org-agenda-start-with-log-mode t)
+     (org-agenda-list 1 ,datestr)
+     (with-current-buffer org-agenda-buffer
+       ,body)
+     (set-buffer (get-file-buffer testfname))
+     (save-buffer)
+     (kill-this-buffer)
+     (delete-file testfname)))
+
+(defun occ-test-macro ()
+  (occ-with-tempagenda
+   "* TaskA
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 08:00]--[2022-04-15 Fri 09:00] =>  1:00
+  :END:
+
+* TaskB
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05
+  :END:
+
+* TaskC
+  :LOGBOOK:
+  CLOCK: [2022-04-15 Fri 11:00]--[2022-04-15 Fri 12:00] =>  1:00
+  :END:
+
+"
+   "2022-04-15"
+   (princ (format "testfile: %s\n%s\n" testfname (buffer-string)))))
+
 (defun test-agenda ()
   (let* ((testfname (make-temp-file "occ-test-agenda-" nil ".org")))
     (setq org-agenda-files `(,testfname)
