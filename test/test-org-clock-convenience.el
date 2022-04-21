@@ -98,29 +98,24 @@
     (occ-test-clockline-regexp line res)))
 
 (defun test-agenda ()
-  (let* ((testfname "/tmp/testagenda.org"))
+  (let* ((testfname (make-temp-file "occ-test-agenda-" nil ".org")))
     (setq org-agenda-files `(,testfname)
           org-agenda-start-with-log-mode t)
     (occ-create-agenda testfname)
     (org-agenda-list 1 "2022-04-15")
-    ;;(org-agenda-goto-date "2022-04-15")
     (with-current-buffer org-agenda-buffer
-      (princ (buffer-string))
-      
+      (princ (format "testfile: %s\n%s\n" testfname (buffer-string)))
       (goto-char (point-min))
       (org-clock-convenience-forward-log-line)
       (org-clock-convenience-forward-log-line)
       (forward-line 0)
-      (princ (occ-extract-agdline-vals '(d1-time d2-time)))
+      (princ (format "before: %s\n" (occ-extract-agdline-vals '(d1-time d2-time))))
       (forward-line 0)
-      (princ (format "PARSED: %s" 
-                     (org-clock-convenience-get-re-field
-                      'd1-time
-                      org-clock-convenience-clocked-agenda-re
-                      org-clock-convenience-clocked-agenda-fields))))
-    
-    
-    )
-  
-  )
-
+      (org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
+      (org-clock-convenience-timestamp-up)
+      (forward-line 0)
+      (princ (format "after: %s\n" (occ-extract-agdline-vals '(d1-time d2-time)))))
+    (set-buffer (get-file-buffer testfname))
+    (save-buffer)
+    (kill-this-buffer)
+    (delete-file testfname)))
