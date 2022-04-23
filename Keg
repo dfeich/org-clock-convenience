@@ -1,0 +1,4 @@
+(source gnu melpa org)
+(package
+  (org-clock-convenience
+    (recipe . (keg :fetcher github :repo "dfeich/org-clock-convenience"))))
