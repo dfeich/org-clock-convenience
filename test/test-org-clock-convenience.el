@@ -47,16 +47,22 @@
      do (progn
           (goto-char pos)
           (forward-line 0)
-          (setq val 
-                (org-clock-convenience-get-re-field
-                 field re re-fields
-                 (format "Regexp does not match line:\n%s" line))))
+          (setq val
+                (org-no-properties
+                 (org-clock-convenience-get-re-field
+                  field re re-fields
+                  (format "Regexp does not match line:\n%s" line)))))
      collect (list field val) into results
      finally do (goto-char pos)
      finally return results)))
 
 (defun occ-extract-agdline-vals (fields)
   (occ-extract-re-vals fields
+                       org-clock-convenience-clocked-agenda-re
+                       org-clock-convenience-clocked-agenda-fields))
+
+(defun occ-extract-all-agdline-vals ()
+  (occ-extract-re-vals org-clock-convenience-clocked-agenda-fields
                        org-clock-convenience-clocked-agenda-re
                        org-clock-convenience-clocked-agenda-fields))
 
@@ -86,7 +92,7 @@
                    org-clock-convenience-tr-fields))
 
 (defmacro occ-with-tempagenda (orgentries datestr &rest body)
-  "Create an angeda view from the ORGENTRIES string and execute BODY.
+  "Create an angenda view from the ORGENTRIES string and execute BODY.
 The agenda view will be created for the date given in DATESTR.
 The agenda buffer will be current and point will be at point-min
 when executing BODY."
@@ -103,6 +109,20 @@ when executing BODY."
      (save-buffer)
      (kill-this-buffer)
      (delete-file testfname)))
+
+(defun occ-print-all-agendaline-vals ()
+  (let ((counter 0))
+    (occ-with-tempagenda
+     occ-testagenda1 "2022-04-15"
+     (princ (format "##########\n%s##########\n" (buffer-string)))
+     (while (org-clock-convenience-forward-log-line t)
+       (princ
+        (save-excursion
+          (format "AGENDA_LINE: %s"  (buffer-substring (progn (forward-line 0) (point))
+                                                       (progn (forward-line 1) (point))))))
+       (pp (occ-extract-all-agdline-vals))
+       (cl-incf counter)))
+    (princ (format "Found %d matching lines in the agenda\n" counter))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Test definitions

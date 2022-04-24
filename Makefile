@@ -1,7 +1,11 @@
 EMACS ?= emacs
 KEG ?= keg
 
-.PHONY: test debug
+ifdef OCC_CONFIG
+loadconf = -l $(OCC_CONFIG)
+endif
+
+.PHONY: test debug test-regx
 
 all: test
 
@@ -18,3 +22,9 @@ debug:
 	$(KEG) exec $(EMACS) -q -l org-clock-convenience.el \
                              -l test/test-org-clock-convenience.el \
                              --eval "(ert t)"
+
+test-regx:
+	$(KEG) exec $(EMACS) --batch -q -l org-clock-convenience.el \
+                             -l test/test-org-clock-convenience.el \
+	                     $(loadconf) \
+                             --eval "(occ-print-all-agendaline-vals)"
