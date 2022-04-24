@@ -1,7 +1,7 @@
 EMACS ?= emacs
 KEG ?= keg
 
-.PHONY: test
+.PHONY: test debug
 
 all: test
 
@@ -14,3 +14,7 @@ test:
                              -l test/test-org-clock-convenience.el \
                              --eval "(ert-run-tests-batch-and-exit nil)"
 
+debug:
+	$(KEG) exec $(EMACS) -q -l org-clock-convenience.el \
+                             -l test/test-org-clock-convenience.el \
+                             --eval "(ert t)"

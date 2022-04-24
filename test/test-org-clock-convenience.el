@@ -2,21 +2,36 @@
 (require 'org-clock-convenience)
 (require 'cl-lib)
 
-(defvar occ-testagenda1 "* TaskA
-  :LOGBOOK:
-  CLOCK: [2022-04-15 Fri 08:00]--[2022-04-15 Fri 09:00] =>  1:00
-  :END:
+(defvar occ-testagenda1 "* TODO TaskA
+   DEADLINE: <2022-05-02 Mon>
+   :PROPERTIES:
+   :Effort:   1:00
+   :END:
+   :LOGBOOK:
+   CLOCK: [2022-04-15 Fri 08:00]--[2022-04-15 Fri 09:00] =>  1:00
+   - State \"TODO\"       from              [2022-04-15 Fri 07:30]
+   :END:
+   - <2022-04-15 Fri 09:00> example of an active ts
 
-* TaskB
-  :LOGBOOK:
-  CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05
-  :END:
+* WAIT [#A] TaskB
+   SCHEDULED: <2022-04-15 Fri 09:50>
+   :PROPERTIES:
+   :Effort:   0:35
+   :END:
+   :LOGBOOK:
+   CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05
+   - State \"WAIT\"       from \"TODO\"       [2022-04-15 Fri 09:50] \\
+     a comment for WAIT state
+   - State \"TODO\"       from              [2022-04-15 Fri 08:30]
+   :END:
 
 * TaskC
-  :LOGBOOK:
-  CLOCK: [2022-04-15 Fri 11:00]--[2022-04-15 Fri 12:00] =>  1:00
-  :END:
-
+   :PROPERTIES:
+   :Category: testcat
+   :END:
+   :LOGBOOK:
+   CLOCK: [2022-04-15 Fri 11:00]--[2022-04-15 Fri 12:00] =>  1:00
+   :END:
 ")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -103,15 +118,26 @@ when executing BODY."
 (ert-deftest occ-test-agenda-re1 ()
   (occ-with-tempagenda
    occ-testagenda1 "2022-04-15"
-   (search-forward "TaskA")
+   (org-clock-convenience-forward-log-line)
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))
            '((d1-time " 8:00") (d2-time " 9:00"))))))
 
+(ert-deftest occ-test-agenda-re2 ()
+  "Count the number of clock lines"
+  (occ-with-tempagenda
+   occ-testagenda1 "2022-04-15"
+   (let ((counter 0))
+     (while (org-clock-convenience-forward-log-line t)
+       (cl-incf counter))
+     (should
+      (equal counter 3)))))
+
 (ert-deftest occ-test-timestamp-change-hours ()
   (occ-with-tempagenda
    occ-testagenda1 "2022-04-15"
-   (search-forward "TaskB")
+   (org-clock-convenience-forward-log-line)
+   (org-clock-convenience-forward-log-line)
    (forward-line 0)
    (org-clock-convenience-goto-agenda-tr-field 'd2-hours)
    (org-clock-convenience-timestamp-change 2)
@@ -127,7 +153,8 @@ when executing BODY."
 (ert-deftest occ-test-timestamp-change-minutes ()
   (occ-with-tempagenda
    occ-testagenda1 "2022-04-15"
-   (search-forward "TaskB")
+   (org-clock-convenience-forward-log-line)
+   (org-clock-convenience-forward-log-line)
    (forward-line 0)
    (org-clock-convenience-goto-agenda-tr-field 'd2-minutes)
    (let ((org-time-stamp-rounding-minutes '(0 10)))
@@ -166,7 +193,8 @@ when executing BODY."
 (ert-deftest occ-test-fill-gap-both ()
   (occ-with-tempagenda
    occ-testagenda1 "2022-04-15"
-   (search-forward "TaskB")
+   (org-clock-convenience-forward-log-line)
+   (org-clock-convenience-forward-log-line)
    (org-clock-convenience-fill-gap-both)
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))

@@ -141,12 +141,15 @@ in `org-clock-convenience-tr-fields'."
 				       "Error: not on a clocked time log line"))
 
 ;;;###autoload
-(defun org-clock-convenience-forward-log-line ()
-  "Move cursor to the next agenda log line."
+(defun org-clock-convenience-forward-log-line (&optional noerror)
+  "Move cursor to the next agenda log line.
+If NOERROR is non-nil, don't fail with an error, but return nil."
   (interactive)
   (if (re-search-forward org-clock-convenience-clocked-agenda-re nil t)
       (org-clock-convenience-goto-agenda-tr-field 'd1-minutes)
-    (error "Error: No next log line")))
+    (if noerror
+        nil
+      (error "Error: No next log line"))))
 
 ;;;###autoload
 (defun org-clock-convenience-backward-log-line ()
