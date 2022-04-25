@@ -16,7 +16,7 @@
 * WAIT [#A] TaskB
    SCHEDULED: <2022-04-15 Fri 09:50>
    :PROPERTIES:
-   :Effort:   0:35
+   :Effort:   1d3h5min
    :END:
    :LOGBOOK:
    CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05

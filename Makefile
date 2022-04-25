@@ -16,6 +16,7 @@ test:
 	     --exec "(princ (format \"Org version: %s\n\" (org-version)) t)"
 	$(KEG) exec $(EMACS) --batch -q -l org-clock-convenience.el \
                              -l test/test-org-clock-convenience.el \
+	                     $(loadconf) \
                              --eval "(ert-run-tests-batch-and-exit nil)"
 
 debug:
