@@ -15,11 +15,12 @@
 
   [[http://melpa.org/#/org-clock-convenience][file:http://melpa.org/packages/org-clock-convenience-badge.svg]]
 
-  This is a collection of functions I am writing in order to make my
-  clocking work-flows easier.
+  This is a collection of functions to make Org mode's clocking work-flow
+  easier.
 
   My aim is to do as much of the clocking from the agenda buffer
-  without ever having to leave it, except to open a new task.
+  without constantly leaving it for visiting the agenda org source
+  files, except to open a new task.
 
   [[file:./org-clock-conv.gif]]
 
@@ -177,6 +178,216 @@
     temporary font, and the time span is clearly not marked, this should not
     confuse the user. I consider this secondary for the moment and will maybe
     add it at some point.
-    
-     
+      
+* Dealing with changes in =org-agenda-prefix-format=
+** The problem
+
+  Org mode allows for full flexibility and so it is no surprise that
+  you also can customize the log line format for clocked times used
+  in the agenda view.
+
+  The format can be configured with the =org-agenda-prefix-format=
+  variable. This is the current default definition
+
+  #+begin_src elisp :exports source
+   (setq org-agenda-prefix-format
+         '((agenda . " %i %-12:c%?-12t% s")
+       (todo . " %i %-12:c")
+       (tags . " %i %-12:c")
+       (search . " %i %-12:c")))
+  #+end_src
+
+  The alist element =(agenda . " %i %-12:c%?-12t% s")= defines the
+  clock line format.
+
+  By default, a clocked line will look like this
+  : testfile:    8:00- 9:00 Clocked:   (1:00) TODO TaskA
+   
+  But somebody wanting to display the effort estimates as well, may
+  set =(agenda . " %i %-12:c%?-12t%-10e% s")= and end up with the
+  effort (1:00) just following the time range
+  : testfile:    8:00- 9:00  1:00      Clocked:   (1:00) TODO TaskA
+
+  org-clock-convenience needs to be able and parse the clocked lines,
+  and the parsing of the line is given by the regular expression
+  stored in =org-clock-convenience-clocked-agenda-re= together with a
+  list naming the subexpressions in
+  =org-clock-convenience-clocked-agenda-fields=:
+
+  #+begin_src emacs-lisp :exports source
+    (defvar org-clock-convenience-clocked-agenda-re
+      "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\( ?[012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)"
+      "Regexp of a clocked time range log line in the Org agenda buffer.")
+
+    (defvar org-clock-convenience-clocked-agenda-fields
+      '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes duration)
+      "Field names corresponding to submatches of `org-clock-convenience-clocked-agenda-re'.")     
+  #+end_src
+
+** Adapting org-clock-convenience's configuration
+
+  You need to adapt =org-clock-convenience-clocked-agenda-re= and the
+  field list in =org-clock-convenience-clocked-agenda-fields= and put
+  it into your emacs configuration.
   
+  For the functioning of org-clock-convenience only the fields
+  =d1-time=, =d1-hours=, =d1-minutes=, =d2-time=, =d2-hours=, and
+  =d2-minutes= are important.
+
+  If you change =org-agenda-prefix-format=, you need to adapt the
+  regular expression and the matching fieldnames. You can put it
+  inside your emacs configuration.
+
+  For the example above where we changed =org-agenda-prefix-format= to
+  contain =(agenda . " %i %-12:c%?-12t%-6e% s")=, the following
+  definitions will work
+
+  #+begin_src emacs-lisp :exports source
+    (setq org-clock-convenience-clocked-agenda-re
+          "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\( ?[012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?\\(?:[[:space:]]+\\([0-9:dhmin]+\\)\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)")
+
+    (setq org-clock-convenience-clocked-agenda-fields
+          '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes effort duration))     
+  #+end_src
+
+** Tools for checking the settings
+
+   This repository contains testing code that allows importing new
+   configuration definitions and run the test suite on it, but I also
+   provide a make target for displaying the matches from a built
+   test agenda.
+
+   For this example I defined new settings in the [[file:test/newconf.el][test/newconf.el]] file
+   of this repository:
+   #+begin_src emacs-lisp :exports source
+(setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t %?-10e% s")
+                                 (todo . " %i %-12:c")
+                                 (tags . " %i %-12:c")
+                                 (search . " %i %-12:c")))
+
+(setq org-clock-convenience-clocked-agenda-re
+      "^ +\\([^:]+\\):[[:space:]]*\\(\\([ \t012][0-9]\\):\\([0-5][0-9]\\)\\)\\(?:-\\(\\( ?[012]?[0-9]\\):\\([0-5][0-9]\\)\\)\\|.*\\)?\\(?:[[:space:]]+\\([0-9:dhmin]+\\)\\)?[[:space:]]+Clocked:[[:space:]]+\\(([0-9]+:[0-5][0-9])\\|(-)\\)")
+
+(setq org-clock-convenience-clocked-agenda-fields
+      '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes effort duration))
+   #+END_SRC
+
+   And now we can pass the new configuration into the test that is
+   executed by the =test-regx= make target by giving its location in the
+   =OCC_CONFIG= variable
+   #+begin_src bash :results output :exports both
+     OCC_CONFIG=test/newconf.el make test-regx
+   #+end_src
+
+   #+RESULTS:
+   #+begin_example
+   emacs --batch -q -l org-clock-convenience.el \
+                                -l test/test-org-clock-convenience.el \
+                        -l test/newconf.el \
+                                --eval "(occ-print-all-agendaline-vals)"
+   org-agenda-prefix-format set to:
+   ((agenda . " %i %-12:c%?-12t %?-10e% s")
+    (todo . " %i %-12:c")
+    (tags . " %i %-12:c")
+    (search . " %i %-12:c"))
+
+   ########## GENERATED AGENDA ##########
+   Day-agenda (W15):
+   Friday     15 April 2022
+     testfile:    8:00- 9:00  1:00      Clocked:   (1:00) TODO TaskA - State "TODO"       from              [2022-04-15 Fri 07:30]
+                  8:00......  ----------------
+     testfile:    9:00......  1:00      TODO TaskA
+     testfile:    9:50......  1d3h5min  Scheduled:  WAIT [#A] TaskB
+     testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
+                 10:00......  ----------------
+     testcat:    11:00-12:00  Clocked:   (1:00) TaskC
+                 12:00......  ----------------
+                 14:00......  ----------------
+                 16:00......  ----------------
+                 18:00......  ----------------
+                 20:00......  ----------------
+   ######################################
+   AGENDA_LINE:   testfile:    8:00- 9:00  1:00      Clocked:   (1:00) TODO TaskA - State "TODO"       from              [2022-04-15 Fri 07:30]
+   ((filename "testfile")
+    (d1-time " 8:00")
+    (d1-hours " 8")
+    (d1-minutes "00")
+    (d2-time " 9:00")
+    (d2-hours " 9")
+    (d2-minutes "00")
+    (effort "1:00")
+    (duration "(1:00)"))
+   AGENDA_LINE:   testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
+   ((filename "testfile")
+    (d1-time "10:00")
+    (d1-hours "10")
+    (d1-minutes "00")
+    (d2-time "10:05")
+    (d2-hours "10")
+    (d2-minutes "05")
+    (effort "1d3h5min")
+    (duration "(0:05)"))
+   AGENDA_LINE:   testcat:    11:00-12:00  Clocked:   (1:00) TaskC
+   ((filename "testcat")
+    (d1-time "11:00")
+    (d1-hours "11")
+    (d1-minutes "00")
+    (d2-time "12:00")
+    (d2-hours "12")
+    (d2-minutes "00")
+    (effort nil)
+    (duration "(1:00)"))
+   Found 3 matching lines in the agenda
+   #+end_example
+
+   Naturally, you can also execute the test suite for checking the new
+   configuration
+
+   : make test
+   #+begin_src bash :results output :exports source
+     make test
+   #+END_SRC
+   #+begin_src bash :results output :exports results
+     make test 2>&1
+   #+END_SRC
+
+   #+RESULTS:
+   #+begin_example
+   Emacs binary at /usr/local/emacs/bin/emacs
+   emacs --batch -q \
+                --exec "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
+        --exec "(princ (format \"Org version: %s\n\" (org-version)) t)"
+   Emacs version: GNU Emacs 27.2 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30)
+    of 2021-08-29
+   Org version: 9.4.4
+   emacs --batch -q -l org-clock-convenience.el \
+                                -l test/test-org-clock-convenience.el \
+                         \
+                                --eval "(ert-run-tests-batch-and-exit nil)"
+   Running 6 tests (2022-04-26 21:09:10+0200, selector ‘t’)
+
+      passed  1/6  occ-test-agenda-re1 (0.418282 sec)
+
+      passed  2/6  occ-test-agenda-re2 (0.022344 sec)
+      passed  3/6  occ-test-clockline-re1 (0.000154 sec)
+
+      passed  4/6  occ-test-fill-gap-both (0.064332 sec)
+
+      passed  5/6  occ-test-timestamp-change-hours (0.007838 sec)
+
+      passed  6/6  occ-test-timestamp-change-minutes (0.026803 sec)
+
+   Ran 6 tests, 6 results as expected, 0 unexpected (2022-04-26 21:09:10+0200, 0.540118 sec)
+
+   #+end_example
+
+** Constructing new regular expressions
+
+   The regular expressions are fairly complex and in order to
+   construct them I recommend using tools like Emacs' own
+   =regexp-builder= that will visualize the matches and highlight
+   subexpressions:
+
+   [[file:regexp-builder.png]]
+
+   

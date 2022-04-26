@@ -55,7 +55,7 @@
   "Regexp of a clocked time range log line in the Org agenda buffer.")
 
 (defvar org-clock-convenience-clocked-agenda-fields
-  '(filename d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes duration)
+  '(category d1-time d1-hours d1-minutes d2-time d2-hours d2-minutes duration)
   "Field names corresponding to submatches of `org-clock-convenience-clocked-agenda-re'.")
 
 (defvar org-clock-convenience-tr-re

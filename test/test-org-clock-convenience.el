@@ -2,7 +2,8 @@
 (require 'org-clock-convenience)
 (require 'cl-lib)
 
-(defvar occ-testagenda1 "* TODO TaskA
+(defvar occ-testagenda1 "#+CATEGORY: testfile
+* TODO TaskA
    DEADLINE: <2022-05-02 Mon>
    :PROPERTIES:
    :Effort:   1:00
@@ -114,7 +115,8 @@ when executing BODY."
   (let ((counter 0))
     (occ-with-tempagenda
      occ-testagenda1 "2022-04-15"
-     (princ (format "##########\n%s##########\n" (buffer-string)))
+     (princ (format "org-agenda-prefix-format set to:\n%s\n" (pp-to-string org-agenda-prefix-format)))
+     (princ (format "########## GENERATED AGENDA ##########\n%s######################################\n" (buffer-string)))
      (while (org-clock-convenience-forward-log-line t)
        (princ
         (save-excursion
