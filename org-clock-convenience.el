@@ -208,24 +208,37 @@ associated org agenda file."
 		     (org-agenda-error)))
 	 (buffer (marker-buffer marker))
 	 (fieldname (org-clock-convenience-get-agenda-tr-fieldname (point)))
-	 timefield updated-time)
+         (timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
+			  ("d1-" 'd1-time)
+			  ("d2-" 'd2-time)))
+         (agenda-fieldlen (save-mark-and-excursion
+                            (forward-line 0)
+                            (length
+                             (org-clock-convenience-get-re-field
+                              timefield
+                              org-clock-convenience-clocked-agenda-re
+                              org-clock-convenience-clocked-agenda-fields))))
+         updated-time)
     (org-with-remote-undo buffer
       (save-mark-and-excursion
         (org-clock-convenience-goto-ts)
         (org-timestamp-change n nil 'updown)
         (beginning-of-line)
         (looking-at org-clock-convenience-tr-re)
-        (setq timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
-			  ("d1-" 'd1-time)
-			  ("d2-" 'd2-time)))
         ;; a bit ugly. regrettably need to replace the leading space, because
         ;; the org-ts-regexp0 defines the leading space to be part of the pattern
         (setq updated-time
 	      (replace-regexp-in-string
                " *" ""
-	       (org-clock-convenience-get-re-field timefield
-						   org-clock-convenience-tr-re
-						   org-clock-convenience-tr-fields))))
+	       (org-clock-convenience-get-re-field
+                timefield
+		org-clock-convenience-tr-re
+		org-clock-convenience-tr-fields)))
+        ;; Field in agenda maybe be shorter than field in clocked
+        ;; LOGBOOK line, because newer org versions do not show
+        ;; leading zero. The following moves the point accordingly
+        ;; when going from 9:55 to 10:00.
+        (cl-incf pos (- (length updated-time) agenda-fieldlen)))
       (org-clock-convenience-goto-agenda-tr-field timefield)
       (let* ((inhibit-read-only t)
              (props (text-properties-at (point))))
