@@ -2,6 +2,8 @@
 (require 'org-clock-convenience)
 (require 'cl-lib)
 
+;; we choose on purpose on of the times as 9:55, so that
+;; we can test changes of fieldlength from 9:55 to 10:00
 (defvar occ-testagenda1 "#+CATEGORY: testfile
 * TODO TaskA
    DEADLINE: <2022-05-02 Mon>
@@ -20,7 +22,7 @@
    :Effort:   1d3h5min
    :END:
    :LOGBOOK:
-   CLOCK: [2022-04-15 Fri 10:00]--[2022-04-15 Fri 10:05] =>  0:05
+   CLOCK: [2022-04-15 Fri 09:30]--[2022-04-15 Fri 09:55] =>  0:25
    - State \"WAIT\"       from \"TODO\"       [2022-04-15 Fri 09:50] \\
      a comment for WAIT state
    - State \"TODO\"       from              [2022-04-15 Fri 08:30]
@@ -165,12 +167,12 @@ when executing BODY."
    (org-clock-convenience-timestamp-change 2)
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))
-           '((d1-time "10:00") (d2-time "12:05"))))
+           '((d1-time " 9:30") (d2-time "11:55"))))
    ;; also test whether the org source file was changed
    (org-clock-convenience-goto-ts)
    (should
     (equal (occ-extract-clockline-vals '(d1-time d2-time))
-           '((d1-time " 10:00") (d2-time " 12:05"))))))
+           '((d1-time " 09:30") (d2-time " 11:55"))))))
 
 (ert-deftest occ-test-timestamp-change-minutes ()
   (occ-with-tempagenda
@@ -183,12 +185,20 @@ when executing BODY."
      (org-clock-convenience-timestamp-change 1))
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))
-           '((d1-time "10:00") (d2-time "10:10"))))
+           '((d1-time " 9:30") (d2-time "10:00"))))
+   (let ((org-time-stamp-rounding-minutes '(0 5)))
+     (org-clock-convenience-timestamp-change -1))
+   (should
+    ;; note: here we end up with a leading 0 in the agenda
+    ;; view for 09:55, because it's already our display from
+    ;; the last change
+    (equal (occ-extract-agdline-vals '(d1-time d2-time)) 
+           '((d1-time " 9:30") (d2-time "09:55"))))
    ;; also test whether the org source file was changed
    (org-clock-convenience-goto-ts)
    (should
     (equal (occ-extract-clockline-vals '(d1-time d2-time))
-           '((d1-time " 10:00") (d2-time " 10:10"))))))
+           '((d1-time " 09:30") (d2-time " 09:55"))))))
 
 ;; NOTE: There currently is a problem with UNDO
 ;; (ert-deftest occ-test-timestamp-change-undo ()

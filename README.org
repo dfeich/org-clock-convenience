@@ -343,7 +343,6 @@
    Naturally, you can also execute the test suite for checking the new
    configuration
 
-   : make test
    #+begin_src bash :results output :exports source
      make test
    #+END_SRC

@@ -31,6 +31,7 @@ test:
 debug:
 	$(KEGEXEC) $(EMACS) -q -l org-clock-convenience.el \
                              -l test/test-org-clock-convenience.el \
+	                     $(loadconf) \
                              --eval "(ert t)"
 
 test-regx:
