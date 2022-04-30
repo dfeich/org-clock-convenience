@@ -2,6 +2,12 @@
 (require 'org-clock-convenience)
 (require 'cl-lib)
 
+(defvar occ-no-cleanup nil
+  "By default we clean up temporary test files.
+
+Useful for debugging test cases interactively, because the
+temporary org source files will not be deleted after each test.")
+
 ;; we choose on purpose on of the times as 9:55, so that
 ;; we can test changes of fieldlength from 9:55 to 10:00
 (defvar occ-testagenda1 "#+CATEGORY: testfile
@@ -94,11 +100,13 @@
                    org-clock-convenience-tr-re
                    org-clock-convenience-tr-fields))
 
-(defmacro occ-with-tempagenda (orgentries datestr &rest body)
+(defmacro occ-with-tempagenda (orgentries datestr noclean &rest body)
   "Create an angenda view from the ORGENTRIES string and execute BODY.
+
 The agenda view will be created for the date given in DATESTR.
 The agenda buffer will be current and point will be at point-min
-when executing BODY."
+when executing BODY. If NOCLEAN is non-nil the temporary org
+testfile will not be deleted to allow for debugging."
   `(let* ((testfname (make-temp-file "occ-test-agenda-" nil ".org"))
           (org-agenda-files (list testfname))
           (org-agenda-start-with-log-mode t))
@@ -108,10 +116,11 @@ when executing BODY."
      (with-current-buffer org-agenda-buffer
        (goto-char (point-min))
        ,@body)
-     (set-buffer (get-file-buffer testfname))
-     (save-buffer)
-     (kill-this-buffer)
-     (delete-file testfname)))
+     (unless ,noclean
+       (set-buffer (get-file-buffer testfname))
+       (save-buffer)
+       (kill-this-buffer)
+       (delete-file testfname))))
 
 (defun occ-print-all-agendaline-vals ()
   (let ((counter 0))
@@ -141,7 +150,7 @@ when executing BODY."
 
 (ert-deftest occ-test-agenda-re1 ()
   (occ-with-tempagenda
-   occ-testagenda1 "2022-04-15"
+   occ-testagenda1 "2022-04-15" occ-no-cleanup
    (org-clock-convenience-forward-log-line)
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))
@@ -150,7 +159,7 @@ when executing BODY."
 (ert-deftest occ-test-agenda-re2 ()
   "Count the number of clock lines"
   (occ-with-tempagenda
-   occ-testagenda1 "2022-04-15"
+   occ-testagenda1 "2022-04-15" occ-no-cleanup
    (let ((counter 0))
      (while (org-clock-convenience-forward-log-line t)
        (cl-incf counter))
@@ -159,7 +168,7 @@ when executing BODY."
 
 (ert-deftest occ-test-timestamp-change-hours ()
   (occ-with-tempagenda
-   occ-testagenda1 "2022-04-15"
+   occ-testagenda1 "2022-04-15" occ-no-cleanup
    (org-clock-convenience-forward-log-line)
    (org-clock-convenience-forward-log-line)
    (forward-line 0)
@@ -176,7 +185,7 @@ when executing BODY."
 
 (ert-deftest occ-test-timestamp-change-minutes ()
   (occ-with-tempagenda
-   occ-testagenda1 "2022-04-15"
+   occ-testagenda1 "2022-04-15" occ-no-cleanup
    (org-clock-convenience-forward-log-line)
    (org-clock-convenience-forward-log-line)
    (forward-line 0)
@@ -203,7 +212,7 @@ when executing BODY."
 ;; NOTE: There currently is a problem with UNDO
 ;; (ert-deftest occ-test-timestamp-change-undo ()
 ;;   (occ-with-tempagenda
-;;    occ-testagenda1 "2022-04-15"
+;;    occ-testagenda1 "2022-04-15" occ-no-cleanup
 ;;    (search-forward "TaskB")
 ;;    (forward-line 0)
 ;;    (org-clock-convenience-goto-agenda-tr-field 'd2-hours)
@@ -224,7 +233,7 @@ when executing BODY."
 
 (ert-deftest occ-test-fill-gap-both ()
   (occ-with-tempagenda
-   occ-testagenda1 "2022-04-15"
+   occ-testagenda1 "2022-04-15" occ-no-cleanup
    (org-clock-convenience-forward-log-line)
    (org-clock-convenience-forward-log-line)
    (org-clock-convenience-fill-gap-both)

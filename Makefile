@@ -32,7 +32,7 @@ debug:
 	$(KEGEXEC) $(EMACS) -q -l org-clock-convenience.el \
                              -l test/test-org-clock-convenience.el \
 	                     $(loadconf) \
-                             --eval "(ert t)"
+                             --eval "(progn (setq occ-no-cleanup t)(ert t))"
 
 test-regx:
 	$(KEGEXEC) $(EMACS) --batch -q -l org-clock-convenience.el \
