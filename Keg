@@ -1,4 +1,5 @@
-(source gnu melpa org)
+(source gnu melpa org
+        (nongnu . "https://elpa.nongnu.org/nongnu/"))
 (package
   (org-clock-convenience
     (recipe . (keg :fetcher github :repo "dfeich/org-clock-convenience"))))
