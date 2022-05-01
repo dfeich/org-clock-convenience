@@ -15,7 +15,7 @@
 
   [[http://melpa.org/#/org-clock-convenience][file:http://melpa.org/packages/org-clock-convenience-badge.svg]]
   #+BEGIN_EXPORT md
-  ![CI workflow](https://github.com/dfeich/org-clock-convenience/actions/workflows/CI.yml/badge.svg)
+  [![CI workflow](https://github.com/dfeich/org-clock-convenience/actions/workflows/CI.yml/badge.svg)](https://github.com/dfeich/org-clock-convenience/actions)
   #+END_EXPORT
 
   This is a collection of functions to make Org mode's clocking work-flow

@@ -4,7 +4,7 @@
 
 [![img](http://melpa.org/packages/org-clock-convenience-badge.svg)](http://melpa.org/#/org-clock-convenience)
 
-![CI workflow](https://github.com/dfeich/org-clock-convenience/actions/workflows/CI.yml/badge.svg)
+[![CI workflow](https://github.com/dfeich/org-clock-convenience/actions/workflows/CI.yml/badge.svg)](https://github.com/dfeich/org-clock-convenience/actions)
 
 This is a collection of functions to make Org mode's clocking work-flow
 easier.
@@ -18,20 +18,20 @@ files, except to open a new task.
 
 # Table of Contents
 
-1.  [org-clock-convenience](#orgc3c4378)
-2.  [Motivation](#orgb8c9e30)
-3.  [Interactive functions](#orgf8c1e97)
-4.  [Installation](#org5da65cb)
-    1.  [basic installation and configuration](#org8bcb1f8)
-    2.  [installation and configuration by **use-package**](#org0e1f4b7)
-    3.  [Tip: using helm for efficiently clocking into tasks](#org6ded3c0)
-5.  [Current shortcomings](#orgddaedc6)
-6.  [Dealing with changes in `org-agenda-prefix-format`](#orgd602a5c)
-    1.  [The problem](#org328f2c8)
-    2.  [Adapting org-clock-convenience's configuration](#org984e2c6)
-    3.  [Tools for checking the settings](#orgb0d9910)
-    4.  [Constructing new regular expressions](#org4f9f46a)
-    5.  [Keg and testing a newer org version](#org8f82e63)
+1.  [org-clock-convenience](#org42e7a63)
+2.  [Motivation](#org75fd7e5)
+3.  [Interactive functions](#orgd47282b)
+4.  [Installation](#orge64362f)
+    1.  [basic installation and configuration](#org1b439d9)
+    2.  [installation and configuration by **use-package**](#org83e4eab)
+    3.  [Tip: using helm for efficiently clocking into tasks](#org6cdeb51)
+5.  [Current shortcomings](#org40e240a)
+6.  [Dealing with changes in `org-agenda-prefix-format`](#org4a7e1d5)
+    1.  [The problem](#org9070af1)
+    2.  [Adapting org-clock-convenience's configuration](#org8c1de8e)
+    3.  [Tools for checking the settings](#org3daf0aa)
+    4.  [Constructing new regular expressions](#org932719a)
+    5.  [Keg and testing a newer org version](#org6c24163)
 
 
 # Motivation
