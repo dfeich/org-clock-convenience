@@ -16,19 +16,20 @@ files, except to open a new task.
 
 # Table of Contents
 
-1.  [org-clock-convenience](#orgaa8997e)
-2.  [Motivation](#org7e581f8)
-3.  [Interactive functions](#orgf726b6b)
-4.  [Installation](#org6e9dcc0)
-    1.  [basic installation and configuration](#orgd2c59ab)
-    2.  [installation and configuration by **use-package**](#org386860d)
-    3.  [Tip: using helm for efficiently clocking into tasks](#org2bf8f4e)
-5.  [Current shortcomings](#org59dd82e)
-6.  [Dealing with changes in `org-agenda-prefix-format`](#org801a8b3)
-    1.  [The problem](#org0300532)
-    2.  [Adapting org-clock-convenience's configuration](#orgff03eab)
-    3.  [Tools for checking the settings](#org05c5d7e)
-    4.  [Constructing new regular expressions](#org2db4f12)
+1.  [org-clock-convenience](#org58587cc)
+2.  [Motivation](#org213477a)
+3.  [Interactive functions](#org1bdc676)
+4.  [Installation](#org01d5396)
+    1.  [basic installation and configuration](#orgd4eeafc)
+    2.  [installation and configuration by **use-package**](#orge21fc22)
+    3.  [Tip: using helm for efficiently clocking into tasks](#org5e4ec90)
+5.  [Current shortcomings](#org0f7c4ff)
+6.  [Dealing with changes in `org-agenda-prefix-format`](#org9a73491)
+    1.  [The problem](#orgadbd728)
+    2.  [Adapting org-clock-convenience's configuration](#orgf8e9a76)
+    3.  [Tools for checking the settings](#orgedb8079)
+    4.  [Constructing new regular expressions](#org3475de9)
+    5.  [Keg and testing a newer org version](#orge4341ed)
 
 
 # Motivation
@@ -267,7 +268,7 @@ configuration definitions and run the test suite on it, but I also
 provide a make target for displaying the matches from a built
 test agenda.
 
-For this example I defined new settings in the [test/newconf.el](test/newconf.el) file
+For this example I defined new settings in the [custom/with-effort.el](custom/with-effort.el) file
 of this repository:
 
     (setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t %?-10e% s")
@@ -285,12 +286,17 @@ And now we can pass the new configuration into the test that is
 executed by the `test-regx` make target by giving its location in the
 `OCC_CONFIG` variable
 
-    OCC_CONFIG=test/newconf.el make test-regx
+    OCC_CONFIG=custom/with-effort.el make test-regx
 
-    emacs --batch -q -l org-clock-convenience.el \
-                                 -l test/test-org-clock-convenience.el \
-                         -l test/newconf.el \
-                                 --eval "(occ-print-all-agendaline-vals)"
+    emacs --batch \
+                         \
+                                -l org-clock-convenience.el \
+                                -l test/test-org-clock-convenience.el \
+                        -l custom/with-effort.el \
+                                --eval "(occ-print-all-agendaline-vals)"
+    Emacs version: GNU Emacs 27.2 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30)
+     of 2021-08-29
+    Org version: 9.4.4
     org-agenda-prefix-format set to:
     ((agenda . " %i %-12:c%?-12t %?-10e% s")
      (todo . " %i %-12:c")
@@ -303,8 +309,8 @@ executed by the `test-regx` make target by giving its location in the
       testfile:    8:00- 9:00  1:00      Clocked:   (1:00) TODO TaskA - State "TODO"       from              [2022-04-15 Fri 07:30]
                    8:00......  ----------------
       testfile:    9:00......  1:00      TODO TaskA
+      testfile:    9:30- 9:55  1d3h5min  Clocked:   (0:25) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
       testfile:    9:50......  1d3h5min  Scheduled:  WAIT [#A] TaskB
-      testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
                   10:00......  ----------------
       testcat:    11:00-12:00  Clocked:   (1:00) TaskC
                   12:00......  ----------------
@@ -323,16 +329,16 @@ executed by the `test-regx` make target by giving its location in the
      (d2-minutes "00")
      (effort "1:00")
      (duration "(1:00)"))
-    AGENDA_LINE:   testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
+    AGENDA_LINE:   testfile:    9:30- 9:55  1d3h5min  Clocked:   (0:25) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
     ((filename "testfile")
-     (d1-time "10:00")
-     (d1-hours "10")
-     (d1-minutes "00")
-     (d2-time "10:05")
-     (d2-hours "10")
-     (d2-minutes "05")
+     (d1-time " 9:30")
+     (d1-hours " 9")
+     (d1-minutes "30")
+     (d2-time " 9:55")
+     (d2-hours " 9")
+     (d2-minutes "55")
      (effort "1d3h5min")
-     (duration "(0:05)"))
+     (duration "(0:25)"))
     AGENDA_LINE:   testcat:    11:00-12:00  Clocked:   (1:00) TaskC
     ((filename "testcat")
      (d1-time "11:00")
@@ -348,35 +354,36 @@ executed by the `test-regx` make target by giving its location in the
 Naturally, you can also execute the test suite for checking the new
 configuration
 
-    make test
-
-    make test
+    OCC_CONFIG=custom/with-effort.el make test
 
     Emacs binary at /usr/local/emacs/bin/emacs
-    emacs --batch -q \
-                 --exec "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
-         --exec "(princ (format \"Org version: %s\n\" (org-version)) t)"
+    emacs --batch \
+                         \
+                                -l org-clock-convenience.el \
+                                -l test/test-org-clock-convenience.el \
+                        -l custom/with-effort.el \
+                 --eval "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
+         --eval "(princ (format \"Org version: %s\n\" (org-version)) t)" \
+                 --eval "(ert-run-tests-batch-and-exit nil)"
+    
+    Running 6 tests (2022-05-01 18:31:30+0200, selector ‘t’)
+    
+       passed  1/6  occ-test-agenda-re1 (0.318694 sec)
+    
+       passed  2/6  occ-test-agenda-re2 (0.021884 sec)
+       passed  3/6  occ-test-clockline-re1 (0.000152 sec)
+    
+       passed  4/6  occ-test-fill-gap-both (0.026258 sec)
+    
+       passed  5/6  occ-test-timestamp-change-hours (0.006018 sec)
+    
+       passed  6/6  occ-test-timestamp-change-minutes (0.023669 sec)
+    
+    Ran 6 tests, 6 results as expected, 0 unexpected (2022-05-01 18:31:30+0200, 0.396951 sec)
+    
     Emacs version: GNU Emacs 27.2 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30)
      of 2021-08-29
     Org version: 9.4.4
-    emacs --batch -q -l org-clock-convenience.el \
-                                 -l test/test-org-clock-convenience.el \
-                          \
-                                 --eval "(ert-run-tests-batch-and-exit nil)"
-    Running 6 tests (2022-04-26 21:09:10+0200, selector ‘t’)
-    
-       passed  1/6  occ-test-agenda-re1 (0.418282 sec)
-    
-       passed  2/6  occ-test-agenda-re2 (0.022344 sec)
-       passed  3/6  occ-test-clockline-re1 (0.000154 sec)
-    
-       passed  4/6  occ-test-fill-gap-both (0.064332 sec)
-    
-       passed  5/6  occ-test-timestamp-change-hours (0.007838 sec)
-    
-       passed  6/6  occ-test-timestamp-change-minutes (0.026803 sec)
-    
-    Ran 6 tests, 6 results as expected, 0 unexpected (2022-04-26 21:09:10+0200, 0.540118 sec)
 
 
 ## Constructing new regular expressions
@@ -387,4 +394,16 @@ construct them I recommend using tools like Emacs' own
 subexpressions:
 
 ![img](regexp-builder.png)
+
+
+## Keg and testing a newer org version
+
+If [keg](https://github.com/conao3/keg.el) is available for installing the test environment the make
+targets will use it to install dependencies and run the commands.
+
+I also included a keg script that will install the newest org
+version available from elpa inside of the `.keg` folder. It can be
+invoked like this
+
+    keg run new-org
 

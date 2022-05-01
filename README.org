@@ -257,7 +257,7 @@
    provide a make target for displaying the matches from a built
    test agenda.
 
-   For this example I defined new settings in the [[file:test/newconf.el][test/newconf.el]] file
+   For this example I defined new settings in the [[file:custom/with-effort.el][custom/with-effort.el]] file
    of this repository:
    #+begin_src emacs-lisp :exports source
 (setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t %?-10e% s")
@@ -276,15 +276,20 @@
    executed by the =test-regx= make target by giving its location in the
    =OCC_CONFIG= variable
    #+begin_src bash :results output :exports both
-     OCC_CONFIG=test/newconf.el make test-regx
+     OCC_CONFIG=custom/with-effort.el make test-regx
    #+end_src
 
    #+RESULTS:
    #+begin_example
-   emacs --batch -q -l org-clock-convenience.el \
-                                -l test/test-org-clock-convenience.el \
-                        -l test/newconf.el \
-                                --eval "(occ-print-all-agendaline-vals)"
+   emacs --batch \
+                        \
+                               -l org-clock-convenience.el \
+                               -l test/test-org-clock-convenience.el \
+                       -l custom/with-effort.el \
+                               --eval "(occ-print-all-agendaline-vals)"
+   Emacs version: GNU Emacs 27.2 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30)
+    of 2021-08-29
+   Org version: 9.4.4
    org-agenda-prefix-format set to:
    ((agenda . " %i %-12:c%?-12t %?-10e% s")
     (todo . " %i %-12:c")
@@ -297,8 +302,8 @@
      testfile:    8:00- 9:00  1:00      Clocked:   (1:00) TODO TaskA - State "TODO"       from              [2022-04-15 Fri 07:30]
                   8:00......  ----------------
      testfile:    9:00......  1:00      TODO TaskA
+     testfile:    9:30- 9:55  1d3h5min  Clocked:   (0:25) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
      testfile:    9:50......  1d3h5min  Scheduled:  WAIT [#A] TaskB
-     testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
                  10:00......  ----------------
      testcat:    11:00-12:00  Clocked:   (1:00) TaskC
                  12:00......  ----------------
@@ -317,16 +322,16 @@
     (d2-minutes "00")
     (effort "1:00")
     (duration "(1:00)"))
-   AGENDA_LINE:   testfile:   10:00-10:05  1d3h5min  Clocked:   (0:05) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
+   AGENDA_LINE:   testfile:    9:30- 9:55  1d3h5min  Clocked:   (0:25) WAIT [#A] TaskB - State "WAIT"       from "TODO"       [2022-04-15 Fri 09:50] \
    ((filename "testfile")
-    (d1-time "10:00")
-    (d1-hours "10")
-    (d1-minutes "00")
-    (d2-time "10:05")
-    (d2-hours "10")
-    (d2-minutes "05")
+    (d1-time " 9:30")
+    (d1-hours " 9")
+    (d1-minutes "30")
+    (d2-time " 9:55")
+    (d2-hours " 9")
+    (d2-minutes "55")
     (effort "1d3h5min")
-    (duration "(0:05)"))
+    (duration "(0:25)"))
    AGENDA_LINE:   testcat:    11:00-12:00  Clocked:   (1:00) TaskC
    ((filename "testcat")
     (d1-time "11:00")
@@ -344,40 +349,42 @@
    configuration
 
    #+begin_src bash :results output :exports source
-     make test
+     OCC_CONFIG=custom/with-effort.el make test
    #+END_SRC
    #+begin_src bash :results output :exports results
-     make test 2>&1
+     OCC_CONFIG=custom/with-effort.el make test 2>&1
    #+END_SRC
 
    #+RESULTS:
    #+begin_example
    Emacs binary at /usr/local/emacs/bin/emacs
-   emacs --batch -q \
-                --exec "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
-        --exec "(princ (format \"Org version: %s\n\" (org-version)) t)"
+   emacs --batch \
+                        \
+                               -l org-clock-convenience.el \
+                               -l test/test-org-clock-convenience.el \
+                       -l custom/with-effort.el \
+                --eval "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
+        --eval "(princ (format \"Org version: %s\n\" (org-version)) t)" \
+                --eval "(ert-run-tests-batch-and-exit nil)"
+
+   Running 6 tests (2022-05-01 18:31:30+0200, selector ‘t’)
+
+      passed  1/6  occ-test-agenda-re1 (0.318694 sec)
+
+      passed  2/6  occ-test-agenda-re2 (0.021884 sec)
+      passed  3/6  occ-test-clockline-re1 (0.000152 sec)
+
+      passed  4/6  occ-test-fill-gap-both (0.026258 sec)
+
+      passed  5/6  occ-test-timestamp-change-hours (0.006018 sec)
+
+      passed  6/6  occ-test-timestamp-change-minutes (0.023669 sec)
+
+   Ran 6 tests, 6 results as expected, 0 unexpected (2022-05-01 18:31:30+0200, 0.396951 sec)
+
    Emacs version: GNU Emacs 27.2 (build 1, x86_64-pc-linux-gnu, GTK+ Version 3.22.30)
     of 2021-08-29
    Org version: 9.4.4
-   emacs --batch -q -l org-clock-convenience.el \
-                                -l test/test-org-clock-convenience.el \
-                         \
-                                --eval "(ert-run-tests-batch-and-exit nil)"
-   Running 6 tests (2022-04-26 21:09:10+0200, selector ‘t’)
-
-      passed  1/6  occ-test-agenda-re1 (0.418282 sec)
-
-      passed  2/6  occ-test-agenda-re2 (0.022344 sec)
-      passed  3/6  occ-test-clockline-re1 (0.000154 sec)
-
-      passed  4/6  occ-test-fill-gap-both (0.064332 sec)
-
-      passed  5/6  occ-test-timestamp-change-hours (0.007838 sec)
-
-      passed  6/6  occ-test-timestamp-change-minutes (0.026803 sec)
-
-   Ran 6 tests, 6 results as expected, 0 unexpected (2022-04-26 21:09:10+0200, 0.540118 sec)
-
    #+end_example
 
 ** Constructing new regular expressions
@@ -389,4 +396,14 @@
 
    [[file:regexp-builder.png]]
 
+   
+** Keg and testing a newer org version
+   If [[https://github.com/conao3/keg.el][keg]] is available for installing the test environment the make
+   targets will use it to install dependencies and run the commands.
+
+   I also included a keg script that will install the newest org
+   version available from elpa inside of the =.keg= folder. It can be
+   invoked like this
+
+   : keg run new-org
    
