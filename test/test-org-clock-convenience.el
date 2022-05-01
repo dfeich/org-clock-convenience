@@ -25,7 +25,7 @@ temporary org source files will not be deleted after each test.")
 * WAIT [#A] TaskB
    SCHEDULED: <2022-04-15 Fri 09:50>
    :PROPERTIES:
-   :Effort:   1d3h5min
+   :Effort:   15:00
    :END:
    :LOGBOOK:
    CLOCK: [2022-04-15 Fri 09:30]--[2022-04-15 Fri 09:55] =>  0:25
