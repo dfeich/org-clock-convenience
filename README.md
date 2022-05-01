@@ -4,6 +4,8 @@
 
 [![img](http://melpa.org/packages/org-clock-convenience-badge.svg)](http://melpa.org/#/org-clock-convenience)
 
+![CI workflow](https://github.com/dfeich/org-clock-convenience/actions/workflows/CI.yml/badge.svg)
+
 This is a collection of functions to make Org mode's clocking work-flow
 easier.
 
@@ -16,20 +18,20 @@ files, except to open a new task.
 
 # Table of Contents
 
-1.  [org-clock-convenience](#org58587cc)
-2.  [Motivation](#org213477a)
-3.  [Interactive functions](#org1bdc676)
-4.  [Installation](#org01d5396)
-    1.  [basic installation and configuration](#orgd4eeafc)
-    2.  [installation and configuration by **use-package**](#orge21fc22)
-    3.  [Tip: using helm for efficiently clocking into tasks](#org5e4ec90)
-5.  [Current shortcomings](#org0f7c4ff)
-6.  [Dealing with changes in `org-agenda-prefix-format`](#org9a73491)
-    1.  [The problem](#orgadbd728)
-    2.  [Adapting org-clock-convenience's configuration](#orgf8e9a76)
-    3.  [Tools for checking the settings](#orgedb8079)
-    4.  [Constructing new regular expressions](#org3475de9)
-    5.  [Keg and testing a newer org version](#orge4341ed)
+1.  [org-clock-convenience](#orgc3c4378)
+2.  [Motivation](#orgb8c9e30)
+3.  [Interactive functions](#orgf8c1e97)
+4.  [Installation](#org5da65cb)
+    1.  [basic installation and configuration](#org8bcb1f8)
+    2.  [installation and configuration by **use-package**](#org0e1f4b7)
+    3.  [Tip: using helm for efficiently clocking into tasks](#org6ded3c0)
+5.  [Current shortcomings](#orgddaedc6)
+6.  [Dealing with changes in `org-agenda-prefix-format`](#orgd602a5c)
+    1.  [The problem](#org328f2c8)
+    2.  [Adapting org-clock-convenience's configuration](#org984e2c6)
+    3.  [Tools for checking the settings](#orgb0d9910)
+    4.  [Constructing new regular expressions](#org4f9f46a)
+    5.  [Keg and testing a newer org version](#org8f82e63)
 
 
 # Motivation
