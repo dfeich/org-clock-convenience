@@ -11,9 +11,9 @@ jobs:
       fail-fast: false
       matrix:
         emacs_version:
-          # - '26.3'
+          - '26.3'
           - '27.2'
-          # - 'snapshot'
+          - 'snapshot'
     steps:
       - uses: actions/checkout@v1
       - uses: purcell/setup-emacs@master
