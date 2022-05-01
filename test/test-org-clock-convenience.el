@@ -46,6 +46,15 @@ temporary org source files will not be deleted after each test.")
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Helper Functions
 
+;; from s library
+(defun occ-trim-left (s)
+  "Remove whitespace at the beginning of S."
+  (declare (pure t) (side-effect-free t))
+  (save-match-data
+    (if (string-match "\\`[ \t\n\r]" s)
+        (replace-match "" t t s)
+      s)))
+
 (defun occ-extract-re-vals (fields re re-fields)
   (let ((pos (point))
         (line (buffer-substring (progn (forward-line 0) (point))
@@ -66,9 +75,16 @@ temporary org source files will not be deleted after each test.")
      finally return results)))
 
 (defun occ-extract-agdline-vals (fields)
-  (occ-extract-re-vals fields
-                       org-clock-convenience-clocked-agenda-re
-                       org-clock-convenience-clocked-agenda-fields))
+  (let ((vals  (occ-extract-re-vals fields
+                                    org-clock-convenience-clocked-agenda-re
+                                    org-clock-convenience-clocked-agenda-fields)))
+    ;; I do not like this, but since newer org versions do no longer
+    ;; have a fixed d2-time string length (e.g. 10:00-9:00 instead of
+    ;; 10:00- 9:00 as earlier) I need to get rid of the leading space.
+    (when (cadr (assq 'd2-time vals))
+      (setf  (cadr (assq 'd2-time vals))
+             (occ-trim-left (cadr (assq 'd2-time vals)))))
+    vals))
 
 (defun occ-extract-all-agdline-vals ()
   (occ-extract-re-vals org-clock-convenience-clocked-agenda-fields
@@ -158,7 +174,7 @@ testfile will not be deleted to allow for debugging."
    (org-clock-convenience-forward-log-line)
    (should
     (equal (occ-extract-agdline-vals '(d1-time d2-time))
-           '((d1-time " 8:00") (d2-time " 9:00"))))))
+           '((d1-time " 8:00") (d2-time "9:00"))))))
 
 (ert-deftest occ-test-agenda-re2 ()
   "Count the number of clock lines"
