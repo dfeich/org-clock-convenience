@@ -1,0 +1,23 @@
+name: CI
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    continue-on-error:
+      ${{ contains(fromJson('["snapshot"]'), matrix.emacs_version) }}
+    strategy:
+      fail-fast: false
+      matrix:
+        emacs_version:
+          # - '26.3'
+          - '27.2'
+          # - 'snapshot'
+    steps:
+      - uses: actions/checkout@v1
+      - uses: purcell/setup-emacs@master
+        with:
+          version: ${{ matrix.emacs_version }}
+      - uses: conao3/setup-keg@master
+      - run: make test
