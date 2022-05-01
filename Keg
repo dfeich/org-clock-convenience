@@ -1,5 +1,31 @@
-(source gnu melpa org
+(source gnu melpa
         (nongnu . "https://elpa.nongnu.org/nongnu/"))
 (package
-  (org-clock-convenience
-    (recipe . (keg :fetcher github :repo "dfeich/org-clock-convenience"))))
+ (org-clock-convenience
+  (recipe . (keg :fetcher github :repo "dfeich/org-clock-convenience"))))
+
+(script
+ (new-org
+  ;; borrowed this function from package-lint
+  (defun highest-installable-version-of (package)
+    "Return the highest version of PACKAGE available for installation."
+    (let ((descriptors (cdr (assq package package-archive-contents))))
+      (if (fboundp 'package-desc-version)
+          (car (sort (mapcar 'package-desc-version descriptors)
+                     (lambda (v1 v2) (not (version-list-< v1 v2)))))
+        (aref descriptors 0))))
+
+  (let ((package-archives (keg-build--package-archives '(gnu)))
+        ;;(orgversion "9.5")
+        ;;(orgreq `(org ,(version-to-list orgversion)))
+        transaction)
+    (condition-case _err
+        (let ((orgreq `(org ,(highest-installable-version-of 'org))))
+          (package-download-transaction
+           (setq transaction (package-compute-transaction nil (list orgreq)))))
+      (error                     ; refresh and retry if error
+       (package-refresh-contents)
+       (let ((orgreq `(org ,(highest-installable-version-of 'org))))
+         (princ (format "Newest available org version: %s\n" orgreq))
+         (package-download-transaction
+          (setq transaction (package-compute-transaction nil (list orgreq))))))))))
