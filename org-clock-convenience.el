@@ -42,12 +42,18 @@
 
 ;; save-mark-and-excursion in Emacs 25 works like save-excursion did before
 (eval-when-compile
-  (when (< emacs-major-version 25)
-    (defmacro save-mark-and-excursion (&rest body)
-      `(save-excursion ,@body)))
-  (when (version< org-version "9.5")
-    (defmacro org-hide-drawer-toggle (arg)
-      `(org-flag-drawer nil))))
+  (if (< emacs-major-version 25)
+      (defmacro org-clock-convenience-save-mark-and-excursion (&rest body)
+        `(save-excursion ,@body))
+    (defalias 'org-clock-convenience-save-mark-and-excursion
+      'save-mark-and-excursion))
+  (if (version< org-version "9.4")
+      (defmacro org-clock-convenience-org-hide-drawer-toggle (&optional
+                                                              force no-error
+                                                              element)
+        `(org-flag-drawer nil))
+    (defalias 'org-clock-convenience-org-hide-drawer-toggle
+      'org-hide-drawer-toggle)))
 
 
 (defvar org-clock-convenience-clocked-agenda-re
@@ -109,7 +115,7 @@ submatch field names to ignore (sometimes there's a subpattern
 containing several other subpatterns, and one wants only the
 names of the smaller subpatterns).  ERRMSG allows specifying an
 error message if RE is not matching."
-  (save-mark-and-excursion
+  (org-clock-convenience-save-mark-and-excursion
     (goto-char point)
     (beginning-of-line)
     (cl-assert (looking-at re) nil
@@ -211,7 +217,7 @@ associated org agenda file."
          (timefield (pcase (cl-subseq (symbol-name fieldname) 0 3)
 			  ("d1-" 'd1-time)
 			  ("d2-" 'd2-time)))
-         (agenda-fieldlen (save-mark-and-excursion
+         (agenda-fieldlen (org-clock-convenience-save-mark-and-excursion
                             (forward-line 0)
                             (length
                              (org-clock-convenience-get-re-field
@@ -220,7 +226,7 @@ associated org agenda file."
                               org-clock-convenience-clocked-agenda-fields))))
          updated-time)
     (org-with-remote-undo buffer
-      (save-mark-and-excursion
+      (org-clock-convenience-save-mark-and-excursion
         (org-clock-convenience-goto-ts)
         (org-timestamp-change n nil 'updown)
         (beginning-of-line)
@@ -294,7 +300,7 @@ the current agenda buffer."
 		     nil
 		     "Error: Not on an agenda clock log line."))
 	 updated-ts updated-time marker buffer tsname tmname)
-    (save-mark-and-excursion
+    (org-clock-convenience-save-mark-and-excursion
       ;; find next/previous log line and fetch the appropriate time
       ;; stamp from the respective org file
       (pcase (cl-subseq (symbol-name fieldname) 0 3)
@@ -345,7 +351,7 @@ the current agenda buffer."
 		     (org-agenda-error)))
     (setq buffer (marker-buffer marker))
     (org-with-remote-undo buffer
-      (save-mark-and-excursion
+      (org-clock-convenience-save-mark-and-excursion
         ;; replace time in log line
         (org-clock-convenience-goto-agenda-tr-field fieldname)
         (let ((inhibit-read-only t))
@@ -388,7 +394,7 @@ from anywhere within a valid clocked time range line."
   "Find the last clock-out time in BUFFER.
 Return position, time string, and headline in a list"
   (with-current-buffer buffer
-    (save-mark-and-excursion
+    (org-clock-convenience-save-mark-and-excursion
      (save-restriction
        (widen)
        (let* ((cpattern (concat "^ *" org-clock-string
@@ -400,9 +406,10 @@ Return position, time string, and headline in a list"
 		   (goto-char (org-element-property :begin hl))
 		   (let* ((end (org-element-property :end hl))
 			  (srend
-			   (save-mark-and-excursion (end-of-line)
-						    (or (re-search-forward "^\\\*" end t)
-							end))))
+			   (org-clock-convenience-save-mark-and-excursion
+                            (end-of-line)
+			    (or (re-search-forward "^\\\*" end t)
+				end))))
 		     (if (re-search-forward cpattern srend t)
 			 (list
 			  (copy-marker  (- (point)
@@ -428,7 +435,7 @@ Return position, time string, and headline in a list"
     (when element
       (let ((pos (point)))
 	(goto-char (org-element-property :begin element))
-	(org-hide-drawer-toggle 'off)
+	(org-clock-convenience-org-hide-drawer-toggle 'off)
 	(goto-char pos)))))
 
 ;;;###autoload
