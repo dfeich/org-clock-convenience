@@ -107,25 +107,29 @@ The agenda view will be created for the date given in DATESTR.
 The agenda buffer will be current and point will be at point-min
 when executing BODY. If NOCLEAN is non-nil the temporary org
 testfile will not be deleted to allow for debugging."
-  `(let* ((testfname (make-temp-file "occ-test-agenda-" nil ".org"))
-          (org-agenda-files (list testfname))
-          (org-agenda-start-with-log-mode t))
-     (with-temp-file testfname
-       (insert ,orgentries))
-     (org-agenda-list 1 ,datestr)
-     (with-current-buffer org-agenda-buffer
-       (goto-char (point-min))
-       ,@body)
-     (unless ,noclean
-       (set-buffer (get-file-buffer testfname))
-       (save-buffer)
-       (kill-this-buffer)
-       (delete-file testfname))))
+  `(let ((testfname (make-temp-file "occ-test-agenda-" nil ".org")))
+     (let ((org-agenda-files (list testfname))
+           (org-agenda-start-with-log-mode t))
+       (with-temp-file testfname
+         (insert ,orgentries))
+       (org-agenda-list 1 ,datestr)
+       (with-current-buffer org-agenda-buffer
+         (goto-char (point-min))
+         ,@body)
+       (unless ,noclean
+         (set-buffer (get-file-buffer testfname))
+         (save-buffer)
+         (kill-this-buffer)
+         (delete-file testfname)))
+     (when ,noclean
+       (setq org-agenda-files (list testfname)))))
 
 (defun occ-print-all-agendaline-vals ()
   (let ((counter 0))
     (occ-with-tempagenda
-     occ-testagenda1 "2022-04-15"
+     occ-testagenda1 "2022-04-15" nil
+     (princ (format "Emacs version: %s\n" (emacs-version)))
+     (princ (format "Org version: %s\n" (org-version)) t)
      (princ (format "org-agenda-prefix-format set to:\n%s\n" (pp-to-string org-agenda-prefix-format)))
      (princ (format "########## GENERATED AGENDA ##########\n%s######################################\n" (buffer-string)))
      (while (org-clock-convenience-forward-log-line t)
