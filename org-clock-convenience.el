@@ -45,15 +45,19 @@
   (if (< emacs-major-version 25)
       (defmacro org-clock-convenience-save-mark-and-excursion (&rest body)
         `(save-excursion ,@body))
-    (defalias 'org-clock-convenience-save-mark-and-excursion
-      'save-mark-and-excursion))
+    (defmacro org-clock-convenience-save-mark-and-excursion (&rest body)
+      `(save-mark-and-excursion ,@body)))
   (if (version< org-version "9.4")
       (defmacro org-clock-convenience-org-hide-drawer-toggle (&optional
-                                                              force no-error
+                                                              force
+                                                              no-error
                                                               element)
         `(org-flag-drawer nil))
-    (defalias 'org-clock-convenience-org-hide-drawer-toggle
-      'org-hide-drawer-toggle)))
+    (defmacro org-clock-convenience-org-hide-drawer-toggle (&optional
+                                                              force
+                                                              no-error
+                                                              element)
+      `(org-hide-drawer-toggle ,force ,no-error ,element))))
 
 
 (defvar org-clock-convenience-clocked-agenda-re

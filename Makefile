@@ -5,6 +5,7 @@ EMACS ?= emacs
 ifndef KEG
   ifneq (, $(shell which keg))
   KEGEXEC = keg exec
+  KEG = keg
   endif
 else
   KEGEXEC = $(KEG) exec
@@ -24,15 +25,25 @@ else
 testcmd = (ert t)
 endif
 
-.PHONY: test debug test-regx
+.PHONY: test debug test-regx clean
+
+.SUFFIXES: .el .elc
+.el.elc:
+	$(EMACS) -Q --batch -L . -f batch-byte-compile $<
+
 
 all: test
 
-test:
+compile: org-clock-convenience.elc
+	@echo "Byte compiling $<"
+	$(KEGEXEC) $(EMACS) --batch \
+              --eval "(byte-compile-file \"org-clock-convenience.el\")"
+
+test: org-clock-convenience.elc
 	@echo "Emacs binary at $(shell which $(EMACS))"
 	$(KEGEXEC) $(EMACS) --batch \
 	                    $(loadinit) \
-                            -l org-clock-convenience.el \
+                            -l org-clock-convenience.elc \
                             -l test/test-org-clock-convenience.el \
 	                    $(loadconf) \
              --eval "(princ (format \"Emacs version: %s\n\" (emacs-version)) t)" \
@@ -54,3 +65,9 @@ test-regx:
                             -l test/test-org-clock-convenience.el \
 	                    $(loadconf) \
                             --eval "(occ-print-all-agendaline-vals)"
+clean:
+	rm -f org-clock-convenience.elc
+	@if test x"${KEGEXEC}" != x; then \
+          echo "KEGEXEX is >${KEGEXEC}<" \
+	  $(KEG) clean; \
+        fi
