@@ -68,6 +68,5 @@ test-regx:
 clean:
 	rm -f org-clock-convenience.elc
 	@if test x"${KEGEXEC}" != x; then \
-          echo "KEGEXEX is >${KEGEXEC}<" \
 	  $(KEG) clean; \
         fi

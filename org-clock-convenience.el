@@ -4,7 +4,7 @@
 ;; Keywords: convenience
 ;; Package-Requires: ((org "8") (emacs "24.3"))
 ;; Homepage: https://github.com/dfeich/org-clock-convenience
-;; Version: 1.2
+;; Version: 1.3
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
