@@ -326,8 +326,10 @@ the current agenda buffer."
 	  (let ((time (current-time)))
 	    (setq updated-ts (format-time-string
 			      (concat "["
-				      (substring (cdr org-time-stamp-formats)
-						 1 -1)
+				          (if (version<= org-version "9.5")
+                              (substring (cdr org-time-stamp-formats)
+						                 1 -1)
+                            (cdr org-time-stamp-formats))
 				      "]")
 			      time)
 		  updated-time (format-time-string "%H:%M" time)))
