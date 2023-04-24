@@ -305,52 +305,51 @@ the current agenda buffer."
 		     "Error: Not on an agenda clock log line."))
 	 updated-ts updated-time marker buffer tsname tmname)
     (org-clock-convenience-save-mark-and-excursion
-      ;; find next/previous log line and fetch the appropriate time
-      ;; stamp from the respective org file
-      (pcase (cl-subseq (symbol-name fieldname) 0 3)
-        ("d1-" (progn
-		 (setq tsname 'd2-timestamp tmname 'd2-time)
-		 (beginning-of-line)
-		 (unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
-						 (point-min) t)
-		   (error "Error: Cannot find previous log line in buffer"))))
-        ("d2-" (progn
-		 (setq tsname 'd1-timestamp tmname 'd1-time)
-		 (forward-line 1)
-		 (unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
-					        (point-max) t)
-		   (setq tsname 'now tmname 'now))))
-        (default (error "Error: Not on a clock field in an agenda log line")))
+     ;; find next/previous log line and fetch the appropriate time
+     ;; stamp from the respective org file
+     (pcase (cl-subseq (symbol-name fieldname) 0 3)
+       ("d1-" (progn
+		(setq tsname 'd2-timestamp tmname 'd2-time)
+		(beginning-of-line)
+		(unless (search-backward-regexp org-clock-convenience-clocked-agenda-re
+						(point-min) t)
+		  (error "Error: Cannot find previous log line in buffer"))))
+       ("d2-" (progn
+		(setq tsname 'd1-timestamp tmname 'd1-time)
+		(forward-line 1)
+		(unless (search-forward-regexp org-clock-convenience-clocked-agenda-re
+					       (point-max) t)
+		  (setq tsname 'now tmname 'now))))
+       (default (error "Error: Not on a clock field in an agenda log line")))
 
-      (if (equal tsname 'now)
-	  (let ((time (current-time)))
-	    (setq updated-ts (format-time-string
-			      (concat "["
-				          (if (version<= org-version "9.5")
-                              (substring (cdr org-time-stamp-formats)
-						                 1 -1)
-                            (cdr org-time-stamp-formats))
-				      "]")
-			      time)
-		  updated-time (format-time-string "%H:%M" time)))
-        (beginning-of-line)
-        (setq marker (or (org-get-at-bol 'org-marker)
-			 (org-agenda-error)))
-        (setq buffer (marker-buffer marker))
-        (set-buffer buffer)
-        (goto-char (marker-position marker))
-        (org-clock-convenience-open-if-in-drawer)
-        (setq updated-ts (concat "["
-				 (org-clock-convenience-get-re-field
-				  tsname
-				  org-clock-convenience-tr-re
-				  org-clock-convenience-tr-fields)
-				 "]")
-	      updated-time (replace-regexp-in-string
-			    " *" "" (org-clock-convenience-get-re-field
-				     tmname
-				     org-clock-convenience-tr-re
-				     org-clock-convenience-tr-fields)))))
+     (if (equal tsname 'now)
+	 (let ((time (current-time)))
+	   (setq updated-ts
+                 (format-time-string
+		  (concat "["
+                          (replace-regexp-in-string "^<\\|>$" ""
+                                                    (cdr org-time-stamp-formats))
+			  "]")
+		  time)
+		 updated-time (format-time-string "%H:%M" time)))
+       (beginning-of-line)
+       (setq marker (or (org-get-at-bol 'org-marker)
+			(org-agenda-error)))
+       (setq buffer (marker-buffer marker))
+       (set-buffer buffer)
+       (goto-char (marker-position marker))
+       (org-clock-convenience-open-if-in-drawer)
+       (setq updated-ts (concat "["
+				(org-clock-convenience-get-re-field
+				 tsname
+				 org-clock-convenience-tr-re
+				 org-clock-convenience-tr-fields)
+				"]")
+	     updated-time (replace-regexp-in-string
+			   " *" "" (org-clock-convenience-get-re-field
+				    tmname
+				    org-clock-convenience-tr-re
+				    org-clock-convenience-tr-fields)))))
     ;; (message "fieldname: %s   tsname: %s  upd-ts: %s upd-time: %s"
     ;; 	     fieldname tsname updated-ts updated-time)
     (setq marker (or (org-get-at-bol 'org-marker)
@@ -358,17 +357,17 @@ the current agenda buffer."
     (setq buffer (marker-buffer marker))
     (org-with-remote-undo buffer
       (org-clock-convenience-save-mark-and-excursion
-        ;; replace time in log line
-        (org-clock-convenience-goto-agenda-tr-field fieldname)
-        (let ((inhibit-read-only t))
-	  (delete-char (length updated-time))
-	  (insert (propertize updated-time 'face 'secondary-selection)))
-        ;; now replace timestamp in org file
-        (org-clock-convenience-goto-ts)
-        (search-backward "[")
-        (search-forward-regexp org-ts-regexp-inactive)
-        (replace-match (concat updated-ts))
-        (org-clock-update-time-maybe)))))
+       ;; replace time in log line
+       (org-clock-convenience-goto-agenda-tr-field fieldname)
+       (let ((inhibit-read-only t))
+	 (delete-char (length updated-time))
+	 (insert (propertize updated-time 'face 'secondary-selection)))
+       ;; now replace timestamp in org file
+       (org-clock-convenience-goto-ts)
+       (search-backward "[")
+       (search-forward-regexp org-ts-regexp-inactive)
+       (replace-match (concat updated-ts))
+       (org-clock-update-time-maybe)))))
 
 ;;;###autoload
 (defun org-clock-convenience-fill-gap-both ()
