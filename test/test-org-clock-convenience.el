@@ -135,7 +135,7 @@ testfile will not be deleted to allow for debugging."
        (unless ,noclean
          (set-buffer (get-file-buffer testfname))
          (save-buffer)
-         (kill-this-buffer)
+         (kill-current-buffer)
          (delete-file testfname)))
      (when ,noclean
        (setq org-agenda-files (list testfname)))))
